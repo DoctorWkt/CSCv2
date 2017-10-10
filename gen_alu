@@ -1,0 +1,134 @@
+#!/usr/bin/perl
+#
+# Generate contents of the ROM ALU
+# (c) 2017 Warren Toomey, GPL3.
+use strict;
+use warnings;
+
+my @ROM;
+
+my %Opcode = (
+    ADD   => 0,
+    SUB   => 1,
+    AND   => 2,
+    OR    => 3,
+    DADD  => 4,    # Binary coded decimal add, no overflow, otherwise XOR
+    PASSA => 5,
+    PASSB => 6,
+    INCA  => 7	   # Output A+1
+);
+
+my $do_bcd = 0;
+
+# Get any optional arguments
+while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
+    # -bcd: do BCD aritmetic
+    if ( $ARGV[0] eq "-bcd" ) {
+        $do_bcd = 1; shift(@ARGV); next;
+    }
+}
+
+# Reversed opcode
+my @Revop;
+foreach my $k ( keys(%Opcode) ) {
+    $Revop[ $Opcode{$k} ] = $k;
+}
+
+foreach my $Cin (0 .. 1) {
+  foreach my $opcode ( 0 .. 7 ) {
+    my $op = $Revop[$opcode];
+    foreach my $a ( 0 .. 15 ) {
+        foreach my $b ( 0 .. 15 ) {
+            my $result;
+
+            # Unsigned BCD add
+            if ($do_bcd && ($op eq "DADD" )) {
+
+                # Result is zero for inputs > 9
+                if ( ( $a > 9 ) || ( $b > 9 ) ) {
+                    $result = 0;
+                } else {
+                    $result = $a + $b + $Cin;
+                }
+
+                # Work out any carry and zero. Never negative or overflow
+                my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+                if ( $result > 9 ) {
+                    $c      = 1;
+                    $result = $result - 10;    # Back to single digit
+                }
+                $z = 1 if ( $result == 0 );
+
+                # Create the ROM value
+                my $romval =
+                  ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c + ($result << 4);
+
+                # Store in the ROM
+                my $location = ($Cin << 11) + ( $opcode << 8 ) + ( $a << 4 ) + $b;
+                $ROM[$location] = $romval;
+                #printf("$a + $b => $c $result location %x\n", $location);
+		#printf("Storing %x: %x\n", $location, $romval);
+                next;
+            }
+
+            # Everything else is binary
+            $result = $a & $b        if ( $op eq "AND" );
+            $result = $a | $b        if ( $op eq "OR" );
+	    $result = $a ^ $b        if (!$do_bcd && ($op eq "DADD"));
+            $result = $a             if ( $op eq "PASSA" );
+            $result = $b             if ( $op eq "PASSB" );
+            $result = $a + $b + $Cin if ( $op eq "ADD" );
+            $result = $a - $b - $Cin if ( $op eq "SUB" );
+            $result = $a + 1         if ( $op eq "INCA" );
+            my $bit5 = $result & 0x10;
+            $result &= 0xf;
+
+            my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+            $n = 1 if ( $result & 0x8 );
+            $z = 1 if ( $result == 0 );
+            $c = 1 if $bit5;
+
+            # Get the sign bits for both inputs and the result
+            my $asign = $a & 0x8;
+            my $bsign = $b & 0x8;
+            my $rsign = $result & 0x8;
+
+            # Inputs have same sign, different from result sign
+            $v = 1 if ( ( $asign == $bsign ) && ( $rsign != $asign ) );
+
+            # Create the ROM value
+            my $romval =
+              ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c + ( $result << 4 );
+
+            # Store in the ROM
+            my $location = ($Cin << 11) + ( $opcode << 8 ) + ( $a << 4 ) + $b;
+            $ROM[$location] = $romval;
+	    #printf("Storing %x: %x\n", $location, $romval);
+        }
+    }
+  }
+}
+
+# Write out the ROM
+open( my $OUT, ">", "alu.rom" ) || die("Can't write to alu.rom: $!\n");
+print( $OUT "v2.0 raw\n" );
+for my $i ( 0 .. ( 2**12 - 1 ) ) {
+    printf( $OUT "%x ", $ROM[$i] ? $ROM[$i] : 0 );
+    print( $OUT "\n" ) if ( ( $i % 8 ) == 7 );
+}
+close($OUT);
+
+# Debug
+#for my $i ( 0 .. ( 2**12 - 1 ) ) {
+#    printf("%x: %x\n", $i, $ROM[$i] ? $ROM[$i] : 0 );
+#}
+
+# Create an image for a real ROM
+open( $OUT, ">", "alu.img" ) || die("Can't write to alu.img: $!\n");
+for my $i ( 0 .. ( 2**13 - 1 ) ) {
+    my $c = pack( 'C', $ROM[$i] ? $ROM[$i] : 0 );
+    print( $OUT $c );
+}
+close($OUT);
+
+exit(0);

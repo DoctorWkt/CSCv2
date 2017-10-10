@@ -1,0 +1,394 @@
+#!/usr/bin/perl
+#
+# Assembler for Warren's crazy small CPU.
+# (c) 2017 Warren Toomey, GPL3.
+use strict;
+use warnings;
+use Data::Dumper;
+
+use constant {
+    RAMwrite => 0x8000,    # Active low
+    Asel     => 0x4000,
+    Bload    => 0x2000,    # Active low
+    Aload    => 0x1000,    # Active low
+    PCincr   => 0x0800,
+    ALUinca  => 0x0700,
+    ALUpassb => 0x0600,
+    ALUpassa => 0x0500,
+    ALUxor   => 0x0400,
+    ALUdadd  => 0x0400,    # BCD version
+    ALUor    => 0x0300,
+    ALUand   => 0x0200,
+    ALUsub   => 0x0100,
+    ALUadd   => 0x0000,
+};
+
+my $debug   = 0;           # Print debugging information
+my $linenum = 0;           # Line number being parsed
+my $PC      = 0;           # Program counter
+my $nopcode = PCincr;      # NOP control lines
+my @ROM;                   # Storage for final machine code
+
+# Some control lines are active low. Set an initial bitfield
+# with these lines high. Then flip all the active lines
+my $offlines = RAMwrite + Aload + Bload;
+
+# Hash of instructions and their control lines
+my %Inst = (
+    LCA   => PCincr + Aload,                          # Load constant into A
+    LCB   => PCincr + Bload,                          # Load constant into B
+    LMA   => PCincr + Aload + Asel,                   # Load B from RAM
+    LMB   => PCincr + Bload + Asel,                   # Load B from RAM
+    ADDM  => PCincr + ALUadd + RAMwrite,              # Store A + B into RAM
+					# Store A + B into RAM and also into B
+    ADDMB => PCincr + ALUadd + RAMwrite + Bload + Asel,
+    SUBM  => PCincr + ALUsub + RAMwrite,              # Store A - B into RAM
+    ANDM  => PCincr + ALUand + RAMwrite,              # Store A & B into RAM
+    ORM   => PCincr + ALUor + RAMwrite,               # Store A | B into RAM
+    XORM  => PCincr + ALUxor + RAMwrite,              # Store A ^ B into RAM
+    DADDM => PCincr + ALUdadd + RAMwrite,             # BCD   A + B into RAM
+    SMA   => PCincr + ALUpassa + RAMwrite,            # Store A into RAM
+    SMIA  => PCincr + ALUinca + RAMwrite,             # Store A + 1 into RAM
+    CLC   => PCincr + ALUpassa + RAMwrite,            # Clear carry
+    SMB   => PCincr + ALUpassb + RAMwrite,            # Store B into RAM
+    SMBA  => PCincr + ALUpassa + RAMwrite + Bload,    # Store A into RAM and B
+    TAB   => PCincr + ALUpassa + RAMwrite + Asel + Bload,	# Copy A to B
+    TBA   => PCincr + ALUpassb + RAMwrite + Asel + Aload,	# Copy B to B
+    NOP   => PCincr,                                  # No operation
+    EQU   => PCincr,                                  # Treated as NOP
+    DAB   => PCincr + Aload + Bload,                  # Display A and B
+          			# Display A and B, load A & B from memory
+    DMAB   => PCincr + Aload + Bload + Asel,
+    JMP   => 0,                                       # Jump always
+    JNS   => 0,                                       # Jump if N set
+    JZS   => 0,                                       # Jump if Z set
+    JVS   => 0,                                       # Jump if V set
+    JCS   => 0,                                       # Jump if C set
+    JNC   => 0,                                       # Jump if N clear
+    JZC   => 0,                                       # Jump if Z clear
+    JVC   => 0,                                       # Jump if V clear
+    JCC   => 0,                                       # Jump if C clear
+    JEQ   => 0,                                       # Jump if equal to zero
+    JNE   => 0,                                       # Jump if not equal to 0
+    JLT   => 0,                                       # Jump if less than zero
+    JGT   => 0,                                       # Jump if greater than 0
+    JLE   => 0,                                       # Jump if <= zero
+    JGE   => 0,                                       # Jump if >= zero
+);
+
+# Hash of jump instructions and the NZVC combinations on which to jump
+my %JCond = (
+    JZS => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
+             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JEQ => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
+             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JVS => { 0x200 => 1, 0x300 => 1, 0x600 => 1, 0x700 => 1,
+             0xa00 => 1, 0xb00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JCS => { 0x100 => 1, 0x300 => 1, 0x500 => 1, 0x700 => 1,
+             0x900 => 1, 0xb00 => 1, 0xd00 => 1, 0xf00 => 1, },
+    JLE => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
+             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
+             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JLT => { 0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
+             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JNS => { 0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
+             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
+    JGT => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1, },
+    JGE => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
+             0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1, },
+    JNC => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
+             0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1, },
+    JZC => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
+             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1, },
+    JVC => { 0x000 => 1, 0x100 => 1, 0x400 => 1, 0x500 => 1,
+             0x800 => 1, 0x900 => 1, 0xc00 => 1, 0xd00 => 1, },
+    JNE => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
+             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1, },
+    JCC => { 0x000 => 1, 0x200 => 1, 0x400 => 1, 0x600 => 1,
+             0x800 => 1, 0xa00 => 1, 0xc00 => 1, 0xe00 => 1, },
+);
+
+# Hash of labels
+my %Label;
+
+# List of NZVC values that match each NZVC string
+my %NZVC_List;
+
+
+#### FUNCTIONS ####
+
+# Generate the values for the %NZVC_List
+sub generate_nzvc_values
+{
+  # Yes this is hideously slow code. Is there a better way?
+  my @Nlist; my @Zlist; my @Vlist; my @Clist;
+
+  for ( my $nzvcvalue = 0x000 ; $nzvcvalue <= 0xf00 ; $nzvcvalue += 0x100 ) {
+    if ($nzvcvalue & 0x800) { @Nlist= ('N', 'x'); } else { @Nlist= ('n', 'x'); }
+    if ($nzvcvalue & 0x400) { @Zlist= ('Z', 'x'); } else { @Zlist= ('z', 'x'); }
+    if ($nzvcvalue & 0x200) { @Vlist= ('V', 'x'); } else { @Vlist= ('v', 'x'); }
+    if ($nzvcvalue & 0x100) { @Clist= ('C', 'x'); } else { @Clist= ('c', 'x'); }
+
+    foreach my $n (@Nlist) {
+      foreach my $z (@Zlist) {
+        foreach my $v (@Vlist) {
+          foreach my $c (@Clist) {
+	    my $nzvcstring= $n . $z . $v . $c;
+	    push(@{ $NZVC_List{$nzvcstring} }, $nzvcvalue);
+	  }
+	}
+      }
+    }
+  }
+
+# Debug: print them all out
+#  foreach my $s (sort(keys(%NZVC_List))) {
+#    print("$s:");
+#    foreach my $val (@{ $NZVC_List{$s} }) {
+#      printf(" %04x", $val);
+#    }
+#    print("\n");
+#  }
+}
+
+# Given a label or a non-string literal, return its value
+sub getValue {
+    my $arg = shift;
+
+    die("null argument in getValue on line $linenum\n") if ( !defined($arg) );
+
+    # Decimal number
+    return ($arg) if ( $arg =~ m{^\d+$} );
+
+    # Octal or hexadecimal number
+    return ( oct($arg) ) if ( $arg =~ m{^0} );
+
+    # Literal character
+    return ( ord($1) ) if ( $arg =~ m{^'(.)'} );
+
+    # Label
+    return ( $Label{$arg} ) if ( defined( $Label{$arg} ) );
+
+    die("Unrecognised literal or label: $arg on line $linenum\n");
+}
+
+# Given a line, return an array of information. The first element is the
+# label on the line, or undef. All remaining elements are array references
+# to instructions. Each instruction has an opcode, an optional operand and
+# an optional set of flags. Any missing optional item is undef if not present.
+#
+# Line format is an optional label with a colon, whitespace. and then one
+# or more instructions. Instructions are separated by vertical vars, which
+# may have whitespace on either side. Each instruction is one or more words
+# separated by whitespace. Words are flags (optional), opcode, operand (optional).
+sub parse_line {
+    my $line = shift;
+    my $label;
+    my @return_list;
+
+    # Find and remove the label
+    if ( $line =~ m{^(\S+):(.*)} ) {
+        $label = $1; $line  = $2;
+    }
+
+    # Save the label
+    push( @return_list, $label );
+
+    # Find all the instructions
+    foreach my $instruction ( split( m{\|}, $line ) ) {
+
+        # Trim leading and trailing whitespace
+        $instruction =~ s{^\s+}{};
+        $instruction =~ s{\s+$}{};
+        my $flags;
+
+        # Split the instruction into three words
+        my (@wordlist) = split( m{\s+}, $instruction, 3 );
+
+        # If first word has the flags format, remove it
+        if ( $wordlist[0] =~ m{^[Nnx][Zzx][Vvx][Ccx]$} ) {
+            $flags = shift(@wordlist);
+        }
+
+        # Get the opcode and operand
+        my ( $opcode, $operand ) = @wordlist;
+
+        # Error check
+        die("Missing opcode on line $linenum\n") if ( !defined($opcode) );
+        die("Unknown opcode $opcode on line $linenum\n")
+          if ( !defined( $Inst{$opcode} ) );
+
+        # Push the parsed instruction
+        push( @return_list, [ $flags, $opcode, $operand ] );
+    }
+    return (@return_list);
+}
+
+# Given an arrayref representing an instruction, parse it and fill in the
+# ROM values
+sub parse_instruction {
+    my $instruction = shift;
+
+    my ( $flags, $op, $addr ) = @{$instruction};
+
+    # If no address, assume 255 as a temp location
+    $addr = 255 if ( !defined($addr) );
+
+    my $addrval = getValue($addr);
+    my $romval  = $Inst{$op} + $addrval;
+
+    # If we have a flags value, only write romval in certain ROM locations.
+    # Otherwise, write romval to all ROM locations
+    if ( !defined($flags) ) { $flags= "xxxx"; }
+
+    printf("\t%s %s %3s %04x", $flags, $op, $addr, $offlines ^ $romval ) if ($debug);
+    if ( $debug == 2 ) {
+        my $ramwrite = ( ( $romval & RAMwrite ) == RAMwrite ) ? 1 : 0;
+        print("\t");
+        print("RAMwrite ") if ($ramwrite);
+        print("Asel ")     if ( ( $romval & Asel ) == Asel );
+        print("Bload ")    if ( ( $romval & Bload ) == Bload );
+        print("Aload ")    if ( ( $romval & Aload ) == Aload );
+        print("ALUinca ")  if ( $ramwrite && ( $romval & 0x0700 ) == ALUinca );
+        print("ALUpassb ") if ( $ramwrite && ( $romval & 0x0700 ) == ALUpassb );
+        print("ALUpassa ") if ( $ramwrite && ( $romval & 0x0700 ) == ALUpassa );
+        print("ALUdadd ")  if ( $ramwrite && ( $romval & 0x0700 ) == ALUdadd );
+        print("ALUor ")    if ( $ramwrite && ( $romval & 0x0700 ) == ALUor );
+        print("ALUand ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUand );
+        print("ALUsub ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUsub );
+        print("ALUadd ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUadd );
+    }
+
+    # Write romval to certain ROM locations
+    foreach my $nzvc (@{ $NZVC_List{$flags} }) {
+
+        # Enable the control lines in the ROM for this instruction
+        $ROM[ $nzvc + $PC ] = $offlines ^ $romval;
+
+        # If this is a conditional jump which doesn't match the NZVC code,
+        # replace the instruction with the $nopcode
+        if ( defined( $JCond{$op} ) && !defined( $JCond{$op}{$nzvc} ) ) {
+            $ROM[ $nzvc + $PC ] = $offlines ^ $nopcode;
+        }
+    }
+}
+
+#### MAIN PROGRAM ####
+
+# Enable debugging
+while ( ( @ARGV >= 1 ) && ( $ARGV[0] ) eq "-d" ) {
+    $debug++; shift(@ARGV);
+}
+
+# Give usage
+die("Usage: $0 [-d] infile\n") if ( @ARGV != 1 );
+
+# Generate the NZVC string to values list
+generate_nzvc_values();
+
+# Read in the instructions
+my @Line;
+open( my $IN, "<", $ARGV[0] ) || die("Cannot read $ARGV[0]: $!\n");
+while (<$IN>) {
+    chomp;
+    s{#.*}{};     	# Lose comments
+    s{\s+$}{};    	# Lose trailing whitespace
+    next if (m{^$});    # Ignore empty lines
+    push( @Line, $_ );
+}
+close($IN);
+
+# First pass: find the labels
+$PC      = 0;
+$linenum = 0;
+foreach my $line (@Line) {
+    $linenum++;
+    my ( $label, @instlist ) = parse_line($line);
+
+    # Get reference to the first instruction on the line
+    my $inst1 = $instlist[0];
+
+    # Save location of label
+    if ($label) {
+
+        # An EQU defines the value of this label
+        if ( defined($inst1) && ( $inst1->[1] eq "EQU" ) ) {
+            $Label{$label} = $inst1->[2]; next;
+        }
+
+        # Otherwise the label's value is the PC's value
+        $Label{$label} = $PC;
+
+        # Don't increment the PC if there was no instruction
+        next if ( !defined($inst1) );
+    }
+    $PC++;
+}
+
+#print Dumper(\%Label);
+
+# Second pass: assemble
+$PC      = 0;
+$linenum = 0;
+foreach my $line (@Line) {
+    $linenum++;
+
+    # Get the instructions on this line
+    my ( $label, @instlist ) = parse_line($line);
+
+    # Get reference to the first instruction
+    my $inst1 = $instlist[0];
+
+    # Skip the line if there is no operand or if the operand is EQU
+    next if ( !defined($inst1) );
+    next if ( $inst1->[1] eq "EQU" );
+
+    printf("%02x:", $PC) if ($debug);
+
+    # Parse each instruction on the line
+    foreach my $instruction (@instlist) {
+        parse_instruction($instruction);
+    }
+
+    $PC++;
+    print("\n") if ($debug);
+}
+
+# Write out the ROMs
+open( my $OUT, ">", "botrom.rom" ) || die("Can't write to botrom.rom: $!\n");
+print( $OUT "v2.0 raw\n" );
+for my $i ( 0 .. ( 2**12 - 1 ) ) {
+    my $val = $ROM[$i] ? $ROM[$i] & 0xff : 0;
+    printf( $OUT "%02x ", $val );
+    print( $OUT "\n" ) if ( ( $i % 16 ) == 15 );
+    print( $OUT " " )  if ( ( $i % 16 ) == 7 );
+}
+close($OUT);
+
+open( $OUT, ">", "toprom.rom" ) || die("Can't write to toprom.rom: $!\n");
+print( $OUT "v2.0 raw\n" );
+for my $i ( 0 .. ( 2**12 - 1 ) ) {
+    my $val = $ROM[$i] ? $ROM[$i] >> 8 : 0;
+    printf( $OUT "%02x ", $val );
+    print( $OUT "\n" ) if ( ( $i % 16 ) == 15 );
+    print( $OUT " " )  if ( ( $i % 16 ) == 7 );
+}
+
+# Create an image for real ROMs
+open( $OUT, ">", "botrom.img" ) || die("Can't write to botrom.img: $!\n");
+for my $i ( 0 .. ( 2**13 - 1 ) ) {
+    my $val = $ROM[$i] ? $ROM[$i] & 0xff : 0;
+    my $c = pack( 'C', $val );
+    print( $OUT $c );
+}
+close($OUT);
+
+open( $OUT, ">", "toprom.img" ) || die("Can't write to toprom.img: $!\n");
+for my $i ( 0 .. ( 2**13 - 1 ) ) {
+    my $val = $ROM[$i] ? $ROM[$i] >> 8 : 0;
+    my $c = pack( 'C', $val );
+    print( $OUT $c );
+}
+close($OUT);
+
+exit(0);

@@ -1,0 +1,153 @@
+#!/usr/bin/perl
+#
+# Simulator for Warren's crazy small CPU.
+# (c) 2017 Warren Toomey, GPL3.
+use strict;
+use warnings;
+use Data::Dumper;
+use constant {
+    ADD   => 0,
+    SUB   => 1,
+    AND   => 2,
+    OR    => 3,
+    XOR   => 4,
+    DADD  => 4,    # Binary coded decimal add, no overflow
+    PASSA => 5,
+    PASSB => 6,
+    INCA  => 7     # Output A+1
+};
+
+my @ALUopname= ( 'ADD', 'SUB', 'AND', 'OR', 'XOR/DADD',
+		'PASSA', 'PASSB', 'INCA' );
+
+my @TopRom;
+my @BotRom;
+my @Ram = (0) x 256;
+my ( $debug, $do_bcd ) = 0;
+
+# Get any optional arguments
+while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
+    # -d: debug
+    if ( $ARGV[0] eq "-d" ) {
+        $debug = 1; shift(@ARGV); next;
+    }
+    # -bcd: do BCD aritmetic
+    if ( $ARGV[0] eq "-bcd" ) {
+        $do_bcd = 1; shift(@ARGV); next;
+    }
+}
+
+# Load in the two ROMs
+open( my $IN, "<", "toprom.rom" ) || die("Can't open toprom.rom: $!\n");
+<$IN>;
+while (<$IN>) {
+    chomp; push( @TopRom, map( { hex($_) } split( /\s+/, $_ ) ) );
+}
+close($IN);
+open( $IN, "<", "botrom.rom" ) || die("Can't open botrom.rom: $!\n");
+<$IN>;
+while (<$IN>) {
+    chomp; push( @BotRom, map( { hex($_) } split( /\s+/, $_ ) ) );
+}
+close($IN);
+
+my ( $PC, $NZVC, $A, $B ) = ( 0, 0, 0, 0 );
+while (1) {
+    my $romaddr  = ( $NZVC << 8 ) + $PC;
+    my $address  = $BotRom[$romaddr];
+    my $ALUop    = $TopRom[$romaddr] & 0x7;
+    my $PCincr   = ( $TopRom[$romaddr] >> 3 ) & 0x1;
+    my $Aload    = ( $TopRom[$romaddr] >> 4 ) & 0x1;
+    my $Bload    = ( $TopRom[$romaddr] >> 5 ) & 0x1;
+    my $Asel     = ( $TopRom[$romaddr] >> 6 ) & 0x1;
+    my $RAMwrite = ( $TopRom[$romaddr] >> 7 ) & 0x1;
+
+    printf( "PC %x flags %x address %x cntrl %x ",
+        $PC, $NZVC, $address, $TopRom[$romaddr] ) if ($debug);
+
+    if ($PCincr) {
+        $PC++;
+    } else {
+        exit(0) if ( $PC == $address );
+        $PC = $address;
+    }
+
+    if ( ($Aload==0) && ($Bload==0) ) {
+        print( chr( ( $A << 4 ) + $B ) );
+        printf( "Printed %x ", ( $A << 4 ) + $B ) if ($debug);
+    }
+
+    # ALU instruction
+    if ($RAMwrite==0) {		# Active low
+        my $result;
+	my $Cin= $NZVC & 1;
+	printf("%s: A %x B %x Cin %d ", 
+	  $ALUopname[$ALUop], $A, $B, $Cin) if ($debug);
+
+        # Unsigned BCD add
+        if ( $do_bcd && ( $ALUop eq DADD ) ) {
+
+            # Result is zero for inputs > 9
+            if ( ( $A > 9 ) || ( $B > 9 ) ) {
+                $result = 0;
+            } else {
+                $result = $A + $B + $Cin;
+            }
+
+            # Work out any carry and zero. Never negative or overflow
+            my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+            if ( $result > 9 ) {
+                $c      = 1;
+                $result = $result - 10;    # Back to single digit
+            }
+            $z = 1 if ( $result == 0 );
+            $NZVC = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c;
+            $Ram[$address] = $result;
+            printf( "RAM %x now %x, NZVC %x\n",
+		$address, $result, $NZVC ) if ($debug);
+        } else {
+
+          $result = $A & $B 	 if ( $ALUop eq AND );
+          $result = $A | $B 	 if ( $ALUop eq OR );
+          $result = $A ^ $B 	 if ( $ALUop eq XOR );
+          $result = $A      	 if ( $ALUop eq PASSA );
+          $result = $B      	 if ( $ALUop eq PASSB );
+          $result = $A + $B + $Cin if ( $ALUop eq ADD );
+          $result = $A - $B - $Cin if ( $ALUop eq SUB );
+          $result = $A + 1  	 if ( $ALUop eq INCA );
+          my $bit5 = $result & 0x10;
+          $result &= 0xf;
+
+          my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+          $n = 1 if ( $result & 0x8 );
+          $z = 1 if ( $result == 0 );
+          $c = 1 if $bit5;
+
+          # Get the sign bits for both inputs and the result
+          my $asign = $A & 0x8;
+          my $bsign = $B & 0x8;
+          my $rsign = $result & 0x8;
+
+          # Inputs have same sign, different from result sign
+          $v = 1 if ( ( $asign == $bsign ) && ( $rsign != $asign ) );
+          $NZVC = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c;
+          $Ram[$address] = $result;
+          printf( "RAM %x now %x, NZVC %x",
+		$address, $result, $NZVC ) if ($debug);
+        }
+    }
+
+    if ($Aload==0) {	# Active low
+        if   ($Asel) { $A = $Ram[$address]; }
+        else         { $A = $address & 0xf; }
+        printf( "A now %x ", $A ) if ($debug);
+    }
+
+    if ($Bload==0) {	# Active low
+        if   ($Asel) { $B = $Ram[$address]; }
+        else         { $B = $address & 0xf; }
+        printf( "B now %x ", $B ) if ($debug);
+    }
+
+    print("\n") if ($debug);
+}
