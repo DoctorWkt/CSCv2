@@ -79,7 +79,7 @@ assembler. Blank input lines are ignored by the assembler.
 
 ## Labels and The EQU Pseudo-op
 
-The assembler provides labels to name:
+The *cas* assembler provides labels for you to name:
 
   * constants
   * memory locations
@@ -91,7 +91,7 @@ Example:
 
 ```
 num1:	EQU	34	# Store num1 in location 34
-five:	EQU	five	# The constant 5
+five:	EQU	5	# The constant 5
 ```
 
 Later on in your program, you can write
@@ -99,11 +99,11 @@ Later on in your program, you can write
 ```
 	LCA	5	# Load 5 into A
 	LCB	five	# Also load 5, into B
-	SMB	num1	# Store B's value in num1
+	SMB	num1	# Store B's value in location num1
 ```
 
-Any label which is defined without EQU gets the value of the
-program counter at that point, and can be used as a jump destination point.
+Any label which is defined without an EQU gets the value of the
+program counter at that point and can be used as a jump destination point.
 For example:
 
 ```
@@ -116,7 +116,7 @@ loop2:	LCA	five
 	JMP	loop1
 ```
 
-As there is no *HALT* instruction, you should end your programs with
+As there is no HALT instruction, you should end your programs with
 an infinite loop, e.g.
 
 ```
@@ -129,7 +129,7 @@ value and exits the simulation.
 ## ALU Flags
 
 Any ALU operation that is written to RAM sets the value of the
-Flags register. This has four bits:
+Flags register. This register holds four bits:
 
   * N: set if the ALU result is negative
   * Z: set if the ALU result is zero
@@ -172,19 +172,20 @@ For example, if you write the instruction
 ```
 
 then eight of the positions at this location will be set to JMP
-instructions, for the positions that indicate a set carry (C) flag.
+instructions for the positions that indicate a set carry (C) flag.
 The other eight positions will be filled with NOP instructions.
 
-The assembler gives the program manual control over this choice as
+The assembler gives the programmer explict control over this choice as
 well. At each instruction location, you can define which instructions
 to insert for one, many or all sixteen of the NZVC Flags combinations.
 
-Each line can contain multiple instructions. Each instruction can be
+Each assembly line can contain multiple instructions. Each instruction can be
 preceded by a four letter keyword that indicates the Flags combination
-that applies to this instruction.
+that applies to this instruction. Instructions are separated by a
+vertical bar.
 
-The keyword is the regular expression [Nnx][Zzx][Vvx][Ccx]. Uppercase
-letters require that flag to be set. Lowercase letters require that
+The four letter keyword is the regular expression *[Nnx][Zzx][Vvx][Ccx]*.
+Uppercase letters require that flag to be set. Lowercase letters require that
 flag to be clear. Letter 'x' indicates that the flag can be any value.
 
 If the line starts with an instruction with no flags keyword, then this
@@ -251,14 +252,14 @@ I've numbered each line, and each line is described after the code.
 ## Function Calls
 
 Even though the CPU architecture is Harvard style, there is a way to 
-perform function calls as long as there are only 16 callers or less to
+perform function calls as long as there are only sixteen callers or less to
 the function.
 
 It works as follows. Each function caller loads a "caller id" into either
 the A or B register before jumping to the function. The function saves the
 caller id. Just before the end of the function, the function loads the
 stored caller id into the Flags register with an instruction sequence
-ending with a *TBF* instruction.
+ending with a TBF instruction.
 
 The Flags register now holds one of the sixteen caller ids. We can now use
 a 2-dimensional instruction to jump back to the instruction following the
