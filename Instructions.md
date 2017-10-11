@@ -67,7 +67,7 @@ explicit (or implicit) address operand.
 |   SUBM   |   Y   |  Store A - B into RAM			|
 |   TAB    |   Y   |  Transfer A to B				|
 |   TBA    |   Y   |  Transfer B to B				|
-|   TBF    |   Y   |  Copy B to flags				|
+|   TBF    |   Y   |  Transfer B to flags			|
 |   XORM   |   Y   |  Store A ^ B into RAM			|
 |   ZEROM  |   Y   |  Store zero into RAM			|
 
