@@ -6,8 +6,8 @@ I need a new ALU operation. So it's time to bite the bullet and upgrade to
 I've made the wiring change to the logisim version and csim, but I haven't
 defined the new ALU operations yet. Time to scribble on paper.
 
-We have to worry about the Asel line, so there are two banks of eight ops.
-Here are the ones we need to keep from CSCv1:
+We have to worry about the Asel line, so there are two banks of eight ALU
+operations. Here are the ones we need to keep from CSCv1:
 
     Operation		Result
     --------------------------
@@ -66,3 +66,8 @@ Wed 11 Oct 11:14:59 AEST 2017
 -----------------------------
 I wrote a test function with four callers, and it actually worked first
 time, that is so excellent! It's called firstfunction.s.
+
+I've added some more CPU instructions that use the new ALU operations.
+I've just added the extra wire from the top ROM Asel output to A12 of
+the ALU ROM. This is the "bank select" control line for the two banks
+of eight ALU operations.
