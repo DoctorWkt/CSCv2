@@ -159,4 +159,42 @@ Flags register.
 
 ## 2-Dimensional Instructions
 
-To be written
+At each instruction location, there can be up to sixteen instructions.
+Each one is chosen based on the sixteen possible combinations of
+NZVC bits in the Flags register.
+
+The conditional jump instructions automatically fill these sixteen
+positions with JMP or NOP instructions to obtain the desired behaviour.
+For example, if you write the instruction
+
+```
+	JCS	endloop		# End loop when carry is set
+```
+
+then eight of the positions at this location will be set to JMP
+instructions, for the positions that indicate a set carry (C) flag.
+The other eight positions will be filled with NOP instructions.
+
+The assembler gives the program manual control over this choice as
+well. At each instruction location, you can define which instructions
+to insert for one, many or all sixteen of the NZVC Flags combinations.
+
+Each line can contain multiple instructions. Each instruction can be
+preceded by a four letter keyword that indicates the Flags combination
+that applies to this instruction.
+
+The keyword is the regular expression [Nnx][Zzx][Vvx][Ccx]. Uppercase
+letters require that flag to be set. Lowercase letters require that
+flag to be clear. Letter 'x' indicates that the flag can be any value.
+
+If the line starts with an instruction with no flags keyword, then this
+instruction is filled in at all sixteen positions. Further instructions
+can then replace this original instruction.
+
+An example of this is the manual definition of the JCS instruction:
+
+```
+	NOP 	| xxxC JMP endloop	# End loop when carry is set
+```
+
+(more soon)
