@@ -114,4 +114,36 @@ Start Logisim from the command line, naming this file:
 logisim crazycpu.circ
 ```
 
-You will see 
+You will see this circuit:
+
+![Logisim circuit](https://raw.githubusercontent.com/DoctorWkt/CSCv2/master/Figs/Logisim1.png)
+
+Right-click on the ALUROM box and choose *Load Image* as follows:
+
+![alurom choice](https://raw.githubusercontent.com/DoctorWkt/CSCv2/master/Figs/Logisim2.png)
+
+Find and select the *alu.rom* file.
+
+![load ROM file](https://raw.githubusercontent.com/DoctorWkt/CSCv2/master/Figs/Logisim3.png)
+
+Click on *Open* to load the file into the ROM. Do the
+same for the TOPROM and the *toprom.rom* file, and BOTROM and the *botrom.rom* file.
+
+If you can't find the *alu.rom* file, run *make* which builds this file with the command:
+
+```
+./gen_alu
+```
+
+With all three ROM image files loaded, you are now ready to run the loaded program. Use
+the *Simulate* drop-down menu at the top of the Logisim window, and choose *Ticks Enabled*
+to start the program running. In the same menu, choose *Tick Frequency* to change the
+speed of the CPU. In the same menu, choose *Ticks Enabled* to pause and restart the simulation.
+In the same menu, choose *Reset Simulation* to restart the program.
+
+# Burning the EEPROM images
+
+This all depends on what EEPROM burner you have. I'm using the MiniPRO TL866xx
+EEPROM programmer with this
+[open-source burning software](https://github.com/vdudouyt/minipro).
+Use the three **.img* files and write each one to a suitable EEPROM.
