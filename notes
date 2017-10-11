@@ -78,3 +78,9 @@ but I should work out why it isn't working with the new ones.
 
 Found it. I had a typo on the definition of ZERO, so the new CLC
 which uses ALUzero was not right. Fixed.
+
+Wednesday 11 October  18:59:16 AEST 2017
+----------------------------------------
+I decided to write up some documentation on the instruction set and
+how to write assembly code, in the form of Instructions.md. I'm
+happy with it now. I've moved the programs into an Examples directory.
