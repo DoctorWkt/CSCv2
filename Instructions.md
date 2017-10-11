@@ -71,9 +71,50 @@ explicit (or implicit) address operand.
 |   XORM   |   Y   |  Store A ^ B into RAM			|
 |   ZEROM  |   Y   |  Store zero into RAM			|
 
-## Labels and EQU
+## Assembler Comments
 
-To be written
+In the assembly input, a comment starts at a hash character (#)
+and continues to the end of the line. All of this is ignored by the
+assembler. Blank input lines are ignored by the assembler.
+
+## Labels and The EQU Pseudo-op
+
+The assembler provides labels to name:
+
+  * constants
+  * memory locations
+  * jump destination points
+
+To define a label with a value, write your label at the beginning
+of the line, followed by a colon, then the EQU pseudo-op and the value.
+Example:
+
+```
+num1:	EQU	34	# Store num1 in location 34
+five:	EQU	five	# The constant 5
+```
+
+Later on in your program, you can write
+
+```
+	LCA	5	# Load 5 into A
+	LCB	five	# Also load 5, into B
+	SMB	num1	# Store B's value in num1
+```
+
+Any label which is defined without EQU gets the value of the
+program counter at that point, and can be used as a jump destination point.
+For example:
+
+```
+loop1:
+loop2:	LCA	five
+	. . .
+	. . .
+	JMP	loop2
+	. . .
+	JMP	loop1
+```
 
 ## 2-Dimensional Instructions
 
