@@ -59,4 +59,10 @@ Wed 11 Oct 10:35:49 AEST 2017
 -----------------------------
 Right, I've made the changes, and I've tested that fibminksy still runs
 under the new system. That doesn't means it is perfect yet, but it's a
-start. Now to start defining some new instructions.
+start. Now to start defining some new instructions. hexbench2 also still
+runs, which is excellent.
+
+Wed 11 Oct 11:14:59 AEST 2017
+-----------------------------
+I wrote a test function with four callers, and it actually worked first
+time, that is so excellent! It's called firstfunction.s.
