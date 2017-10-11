@@ -54,16 +54,23 @@ my %Inst = (
     ORM   => PCincr + ALUor + RAMwrite,               # Store A | B into RAM
     XORM  => PCincr + ALUxor + RAMwrite,              # Store A ^ B into RAM
     DADDM => PCincr + ALUdadd + RAMwrite,             # BCD   A + B into RAM
+    DSUBM => PCincr + ALUdsub + RAMwrite,             # BCD   A - B into RAM
+    ZEROM => PCincr + ALUzero + RAMwrite,             # Store zero into RAM
+    LMULM => PCincr + ALUmullo + RAMwrite,            # Store A * B (low nibble) into RAM
+    HMULM => PCincr + ALUmulhi + RAMwrite,            # Store A * B (hi nibble) into RAM
+    DIVM =>  PCincr + ALUdiv + RAMwrite,              # Store A / B into RAM
+    MODM =>  PCincr + ALUmod + RAMwrite,              # Store A % B into RAM
     SMA   => PCincr + ALUpassa + RAMwrite,            # Store A into RAM
     SMIA  => PCincr + ALUinca + RAMwrite,             # Store A + 1 into RAM
     CLC   => PCincr + ALUzero + RAMwrite,             # Clear carry
     SMB   => PCincr + ALUpassb + RAMwrite,            # Store B into RAM
     SMBA  => PCincr + ALUpassa + RAMwrite + Bload,    # Store A into RAM and B
-    TAB   => PCincr + ALUpassa + RAMwrite + Bload,    # Copy A to B
-    TBA   => PCincr + ALUpassb + RAMwrite + Aload,    # Copy B to B
+    TAB   => PCincr + ALUpassa + RAMwrite + Bload,    # Transfer A to B
+    TBA   => PCincr + ALUpassb + RAMwrite + Aload,    # Transfer B to B
     NOP   => PCincr,                                  # No operation
     EQU   => PCincr,                                  # Treated as NOP
-    DAB   => PCincr + Aload + Bload,                  # Display A and B
+			        # Display A and B, load A & B with constant
+    DAB   => PCincr + Aload + Bload,                 
           			# Display A and B, load A & B from memory
     DMAB   => PCincr + Aload + Bload + Asel,
     TBF   => PCincr + ALUbflags + RAMwrite,	      # Copy B to flags
