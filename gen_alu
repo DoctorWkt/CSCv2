@@ -5,121 +5,148 @@
 use strict;
 use warnings;
 
+use constant {
+    DADD  => 0,         # A + B decimal
+    DSUB  => 1,         # A - B decimal
+    AND   => 2,         # A & B
+    OR    => 3,         # A | B
+    XOR   => 4,         # A ^ B
+    INCA  => 5,         # A + 1
+    BFLAGS => 6,        # 0, flags set to B's value
+    ZERO  => 7,         # 0
+    ADD   => 8,         # A + B binary
+    SUB   => 9,         # A - B binary
+    PASSA => 10,        # A
+    PASSB => 11,        # B
+    MULLO => 12,        # A * B binary, high nibble
+    MULHI => 13,        # A * B binary, low nibble
+    DIV   => 14,        # A / B binary
+    MOD   => 15,        # A % B binary
+};
+
 my @ROM;
 
-my %Opcode = (
-    ADD   => 0,
-    SUB   => 1,
-    AND   => 2,
-    OR    => 3,
-    DADD  => 4,    # Binary coded decimal add, no overflow, otherwise XOR
-    PASSA => 5,
-    PASSB => 6,
-    INCA  => 7	   # Output A+1
-);
+foreach my $Asel ( 0 .. 1 ) {
+    foreach my $Cin ( 0 .. 1 ) {
+        foreach my $lowopcode ( 0 .. 7 ) {
+	    # Include Asel as part of the ALUop
+	    my $ALUop= $lowopcode +($Asel << 3);
 
-my $do_bcd = 0;
+            foreach my $A ( 0 .. 15 ) {
+                foreach my $B ( 0 .. 15 ) {
+                    my $result;
 
-# Get any optional arguments
-while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
-    # -bcd: do BCD aritmetic
-    if ( $ARGV[0] eq "-bcd" ) {
-        $do_bcd = 1; shift(@ARGV); next;
-    }
-}
+		    # printf("ALUop %d, A %d, B %d ", $ALUop, $A, $B);
 
-# Reversed opcode
-my @Revop;
-foreach my $k ( keys(%Opcode) ) {
-    $Revop[ $Opcode{$k} ] = $k;
-}
+                    # Unsigned BCD operation
+		    if ( ($ALUop eq DADD) || ($ALUop eq DSUB) ) {
 
-foreach my $Cin (0 .. 1) {
-  foreach my $opcode ( 0 .. 7 ) {
-    my $op = $Revop[$opcode];
-    foreach my $a ( 0 .. 15 ) {
-        foreach my $b ( 0 .. 15 ) {
-            my $result;
+                        # Result is zero for inputs > 9
+                        if ( ( $A > 9 ) || ( $B > 9 ) ) {
+                            $result = 0;
+                        }
+                        else {
+                            $result = ($ALUop eq DADD) ? $A + $B + $Cin : $A - $B - $Cin;
+                        }
 
-            # Unsigned BCD add
-            if ($do_bcd && ($op eq "DADD" )) {
+                       # Work out any carry and zero. Never negative or overflow
+                        my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+                        if ( $result > 9 ) {
+                            $c      = 1;
+                            $result = $result - 10;    # Back to single digit
+                        }
+			if ( $result < 0 ) {
+                	    $c      = 1;
+                	    $result = $result + 10;    # Back to single digit
+            	        }
+                        $z = 1 if ( $result == 0 );
 
-                # Result is zero for inputs > 9
-                if ( ( $a > 9 ) || ( $b > 9 ) ) {
-                    $result = 0;
-                } else {
-                    $result = $a + $b + $Cin;
+                        # Create the ROM value
+                        my $romval = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c +
+				( $result << 4 );
+			# printf("Cin %d result %d ", $Cin, $result);
+			# printf("nzvc %d%d%d%d, romval %d ", $n, $z, $v, $c, $romval);
+
+                        # Store in the ROM
+                        my $location = ( $Asel << 12 ) + ( $Cin << 11 ) +
+				( $lowopcode << 8 ) + ( $A << 4 ) + $B;
+                        $ROM[$location] = $romval;
+
+                        # printf("Storing %x: %x\n", $location, $romval);
+                        next;
+                    }
+
+                    # Everything else is binary
+                    $result = $A & $B if ( $ALUop eq AND );
+                    $result = $A | $B if ( $ALUop eq OR );
+                    $result = $A ^ $B if ( $ALUop eq XOR );
+                    $result = $A      if ( $ALUop eq PASSA );
+                    $result = $B      if ( $ALUop eq PASSB );
+                    $result = $A + $B + $Cin if ( $ALUop eq ADD );
+                    $result = $A - $B - $Cin if ( $ALUop eq SUB );
+                    $result = $A + 1         if ( $ALUop eq INCA );
+		    $result = 0            if ( $ALUop eq ZERO );
+          	    $result = 0            if ( $ALUop eq BFLAGS );
+		    if ( $ALUop eq MOD ) {
+          	        $result = ($B != 0) ? ($A % $B) : 0;	# Mod by zero protection
+		    }
+		    if ( $ALUop eq DIV ) {
+          	        $result = ($B != 0) ? int($A / $B) : 0;	# Div by zero protection
+		    }
+          	    $result = ($A * $B) % 0xf if ( $ALUop eq MULLO );
+          	    $result = ($A * $B) >> 4 if ( $ALUop eq MULHI );
+
+                    my $bit5 = $result & 0x10;
+                    $result &= 0xf;
+
+                    my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
+                    $n = 1 if ( $result & 0x8 );
+                    $z = 1 if ( $result == 0 );
+                    $c = 1 if $bit5;
+
+                    # Get the sign bits for both inputs and the result
+                    my $asign = $A & 0x8;
+                    my $bsign = $B & 0x8;
+                    my $rsign = $result & 0x8;
+
+                    # Inputs have same sign, different from result sign
+                    $v = 1 if ( ( $asign == $bsign ) && ( $rsign != $asign ) );
+
+		    # But override all of the above for BFLAGS
+		    if ( $ALUop eq BFLAGS ) {
+			$n= (($B & 0x8) >> 3);
+			$z= (($B & 0x4) >> 2);
+			$v= (($B & 0x2) >> 1);
+			$c= ($B & 0x1);
+		    }
+
+                    # Create the ROM value
+                    my $romval = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c +
+                      ( $result << 4 );
+
+                    # Store in the ROM
+                    my $location = ( $Asel << 12) +
+                      ( $Cin << 11 ) + ( $lowopcode << 8 ) + ( $A << 4 ) + $B;
+                    $ROM[$location] = $romval;
+
+                    # printf("Storing %x: %x\n", $location, $romval);
                 }
-
-                # Work out any carry and zero. Never negative or overflow
-                my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
-                if ( $result > 9 ) {
-                    $c      = 1;
-                    $result = $result - 10;    # Back to single digit
-                }
-                $z = 1 if ( $result == 0 );
-
-                # Create the ROM value
-                my $romval =
-                  ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c + ($result << 4);
-
-                # Store in the ROM
-                my $location = ($Cin << 11) + ( $opcode << 8 ) + ( $a << 4 ) + $b;
-                $ROM[$location] = $romval;
-                #printf("$a + $b => $c $result location %x\n", $location);
-		#printf("Storing %x: %x\n", $location, $romval);
-                next;
             }
-
-            # Everything else is binary
-            $result = $a & $b        if ( $op eq "AND" );
-            $result = $a | $b        if ( $op eq "OR" );
-	    $result = $a ^ $b        if (!$do_bcd && ($op eq "DADD"));
-            $result = $a             if ( $op eq "PASSA" );
-            $result = $b             if ( $op eq "PASSB" );
-            $result = $a + $b + $Cin if ( $op eq "ADD" );
-            $result = $a - $b - $Cin if ( $op eq "SUB" );
-            $result = $a + 1         if ( $op eq "INCA" );
-            my $bit5 = $result & 0x10;
-            $result &= 0xf;
-
-            my ( $n, $z, $v, $c ) = ( 0, 0, 0, 0 );
-            $n = 1 if ( $result & 0x8 );
-            $z = 1 if ( $result == 0 );
-            $c = 1 if $bit5;
-
-            # Get the sign bits for both inputs and the result
-            my $asign = $a & 0x8;
-            my $bsign = $b & 0x8;
-            my $rsign = $result & 0x8;
-
-            # Inputs have same sign, different from result sign
-            $v = 1 if ( ( $asign == $bsign ) && ( $rsign != $asign ) );
-
-            # Create the ROM value
-            my $romval =
-              ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c + ( $result << 4 );
-
-            # Store in the ROM
-            my $location = ($Cin << 11) + ( $opcode << 8 ) + ( $a << 4 ) + $b;
-            $ROM[$location] = $romval;
-	    #printf("Storing %x: %x\n", $location, $romval);
         }
     }
-  }
 }
 
 # Write out the ROM
 open( my $OUT, ">", "alu.rom" ) || die("Can't write to alu.rom: $!\n");
 print( $OUT "v2.0 raw\n" );
-for my $i ( 0 .. ( 2**12 - 1 ) ) {
+for my $i ( 0 .. ( 2**13 - 1 ) ) {
     printf( $OUT "%x ", $ROM[$i] ? $ROM[$i] : 0 );
     print( $OUT "\n" ) if ( ( $i % 8 ) == 7 );
 }
 close($OUT);
 
 # Debug
-#for my $i ( 0 .. ( 2**12 - 1 ) ) {
+#for my $i ( 0 .. ( 2**13 - 1 ) ) {
 #    printf("%x: %x\n", $i, $ROM[$i] ? $ROM[$i] : 0 );
 #}
 

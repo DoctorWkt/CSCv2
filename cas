@@ -12,15 +12,22 @@ use constant {
     Bload    => 0x2000,    # Active low
     Aload    => 0x1000,    # Active low
     PCincr   => 0x0800,
-    ALUinca  => 0x0700,
-    ALUpassb => 0x0600,
-    ALUpassa => 0x0500,
-    ALUxor   => 0x0400,
-    ALUdadd  => 0x0400,    # BCD version
-    ALUor    => 0x0300,
+    ALUdadd  => 0x0000,
+    ALUdsub  => 0x0100,
     ALUand   => 0x0200,
-    ALUsub   => 0x0100,
-    ALUadd   => 0x0000,
+    ALUor    => 0x0300,
+    ALUxor   => 0x0400,
+    ALUinca  => 0x0500,
+    ALUbflags => 0x0600,
+    ALUzero  => 0x7000,
+    ALUadd   => 0x4000,	   # We borrow Asel for the upper ALU ops
+    ALUsub   => 0x4100,
+    ALUpassa => 0x4200,
+    ALUpassb => 0x4300,
+    ALUmullo => 0x4400,
+    ALUmulhi => 0x4500,
+    ALUdiv   => 0x4600,
+    ALUmod   => 0x4700,
 };
 
 my $debug   = 0;           # Print debugging information
@@ -41,7 +48,7 @@ my %Inst = (
     LMB   => PCincr + Bload + Asel,                   # Load B from RAM
     ADDM  => PCincr + ALUadd + RAMwrite,              # Store A + B into RAM
 					# Store A + B into RAM and also into B
-    ADDMB => PCincr + ALUadd + RAMwrite + Bload + Asel,
+    ADDMB => PCincr + ALUadd + RAMwrite + Bload,
     SUBM  => PCincr + ALUsub + RAMwrite,              # Store A - B into RAM
     ANDM  => PCincr + ALUand + RAMwrite,              # Store A & B into RAM
     ORM   => PCincr + ALUor + RAMwrite,               # Store A | B into RAM
@@ -52,8 +59,8 @@ my %Inst = (
     CLC   => PCincr + ALUpassa + RAMwrite,            # Clear carry
     SMB   => PCincr + ALUpassb + RAMwrite,            # Store B into RAM
     SMBA  => PCincr + ALUpassa + RAMwrite + Bload,    # Store A into RAM and B
-    TAB   => PCincr + ALUpassa + RAMwrite + Asel + Bload,	# Copy A to B
-    TBA   => PCincr + ALUpassb + RAMwrite + Asel + Aload,	# Copy B to B
+    TAB   => PCincr + ALUpassa + RAMwrite + Bload,    # Copy A to B
+    TBA   => PCincr + ALUpassb + RAMwrite + Aload,    # Copy B to B
     NOP   => PCincr,                                  # No operation
     EQU   => PCincr,                                  # Treated as NOP
     DAB   => PCincr + Aload + Bload,                  # Display A and B
@@ -249,14 +256,22 @@ sub parse_instruction {
         print("Asel ")     if ( ( $romval & Asel ) == Asel );
         print("Bload ")    if ( ( $romval & Bload ) == Bload );
         print("Aload ")    if ( ( $romval & Aload ) == Aload );
-        print("ALUinca ")  if ( $ramwrite && ( $romval & 0x0700 ) == ALUinca );
-        print("ALUpassb ") if ( $ramwrite && ( $romval & 0x0700 ) == ALUpassb );
-        print("ALUpassa ") if ( $ramwrite && ( $romval & 0x0700 ) == ALUpassa );
-        print("ALUdadd ")  if ( $ramwrite && ( $romval & 0x0700 ) == ALUdadd );
-        print("ALUor ")    if ( $ramwrite && ( $romval & 0x0700 ) == ALUor );
-        print("ALUand ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUand );
-        print("ALUsub ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUsub );
-        print("ALUadd ")   if ( $ramwrite && ( $romval & 0x0700 ) == ALUadd );
+        print("ALUdadd ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUdadd );
+        print("ALUdsub ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUdsub );
+        print("ALUand ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUand );
+        print("ALUor ")    if ( $ramwrite && ( $romval & 0x4700 ) == ALUor );
+        print("ALUxor ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUxor );
+        print("ALUinca ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUinca );
+        print("ALUbflags ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUbflags );
+        print("ALUzero ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUzero );
+        print("ALUpassa ") if ( $ramwrite && ( $romval & 0x4700 ) == ALUpassa );
+        print("ALUpassb ") if ( $ramwrite && ( $romval & 0x4700 ) == ALUpassb );
+        print("ALUadd ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUadd );
+        print("ALUsub ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUsub );
+        print("ALUmullo ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmullo );
+        print("ALUmulhi ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmulhi );
+        print("ALUdiv ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUdiv );
+        print("ALUmod ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmod );
     }
 
     # Write romval to certain ROM locations

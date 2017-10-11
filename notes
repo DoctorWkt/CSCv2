@@ -1,0 +1,62 @@
+Wed 11 Oct 08:08:10 AEST 2017
+-----------------------------
+Chris Baird showed a way to do function calls, but to make it more efficient
+I need a new ALU operation. So it's time to bite the bullet and upgrade to
+16 ALU operations. I've cloned CSC version 1 to this version, version 2.
+I've made the wiring change to the logisim version and csim, but I haven't
+defined the new ALU operations yet. Time to scribble on paper.
+
+We have to worry about the Asel line, so there are two banks of eight ops.
+Here are the ones we need to keep from CSCv1:
+
+    Operation		Result
+    --------------------------
+    ALUinca		A + 1
+    ALUpassb		B
+    ALUpassa		A
+    ALUxor		A ^ B
+    ALUdadd		A + B decimal
+    ALUor		A | B
+    ALUand		A & B
+    ALUsub		A - B binary
+    ALUadd		A + B binary
+
+I want to bring in at least:
+
+    ALUdsub		A - B decimal
+    ALUbflags		anything, but flags set to B
+
+That leaves five more operations. I'd suggest at least these four:
+
+    ALUmullo		A * B binary, low  4 bits
+    ALUmulhi		A * B binary, high 4 bits
+    ALUdiv		A / B
+    ALUmod		A % B
+
+Are there other operations that would be more useful?
+
+Looking at the existing uses of the ALU, along with the Asel control line,
+we have to at least these operations when Asel is on: ALUadd, ALUpassa
+and ALUpassb. So let's try to partition up the possible operations:
+
+  Asel off		Asel on
+---------------------------------
+  ALUdadd		ALUadd
+  ALUdsub		ALUsub
+  ALUand		ALUpassa
+  ALUop			ALUpassb
+  ALUxor		ALUmullo
+  ALUinca		ALUmulhi
+  ALUbflags		ALUdiv
+  <unallocated>		ALUmod
+
+For now, I might put in ALUzero (output is zero) as the final operation,
+and temporarily implement this in cas and csim, and make sure the old
+programs can be reassembled and still work. I still need to work out what
+useful result we can have for ALUbflags. For now, zero.
+
+Wed 11 Oct 10:35:49 AEST 2017
+-----------------------------
+Right, I've made the changes, and I've tested that fibminksy still runs
+under the new system. That doesn't means it is perfect yet, but it's a
+start. Now to start defining some new instructions.

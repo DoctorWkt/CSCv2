@@ -6,34 +6,39 @@ use strict;
 use warnings;
 use Data::Dumper;
 use constant {
-    ADD   => 0,
-    SUB   => 1,
-    AND   => 2,
-    OR    => 3,
-    XOR   => 4,
-    DADD  => 4,    # Binary coded decimal add, no overflow
-    PASSA => 5,
-    PASSB => 6,
-    INCA  => 7     # Output A+1
+    DADD  => 0,		# A + B decimal
+    DSUB  => 1,		# A - B decimal
+    AND   => 2,		# A & B
+    OR    => 3,		# A | B
+    XOR   => 4,		# A ^ B
+    INCA  => 5,		# A + 1
+    BFLAGS => 6,	# 0, flags set to B's value
+    ZERO  => 7,		# 0
+    ADD   => 8,		# A + B binary
+    SUB   => 9,		# A - B binary
+    PASSA => 10,	# A
+    PASSB => 11,	# B
+    MULLO => 12,	# A * B binary, high nibble
+    MULHI => 13,	# A * B binary, low nibble
+    DIV   => 14,	# A / B binary
+    MOD   => 15,	# A % B binary
 };
 
-my @ALUopname= ( 'ADD', 'SUB', 'AND', 'OR', 'XOR/DADD',
-		'PASSA', 'PASSB', 'INCA' );
+my @ALUopname= ( 'DADD', 'DSUB', 'AND', 'OR',
+		 'XOR', 'INCA', 'BFLAGS', 'ZERO',
+		 'ADD', 'SUB', 'PASSA', 'PASSB',
+		 'MULLO', 'MULHI', 'DIV', 'MOD' );
 
 my @TopRom;
 my @BotRom;
 my @Ram = (0) x 256;
-my ( $debug, $do_bcd ) = 0;
+my $debug = 0;
 
 # Get any optional arguments
 while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
     # -d: debug
     if ( $ARGV[0] eq "-d" ) {
         $debug = 1; shift(@ARGV); next;
-    }
-    # -bcd: do BCD aritmetic
-    if ( $ARGV[0] eq "-bcd" ) {
-        $do_bcd = 1; shift(@ARGV); next;
     }
 }
 
@@ -62,6 +67,9 @@ while (1) {
     my $Asel     = ( $TopRom[$romaddr] >> 6 ) & 0x1;
     my $RAMwrite = ( $TopRom[$romaddr] >> 7 ) & 0x1;
 
+    # Include Asel as part of the ALUop
+    $ALUop= $ALUop + ($Asel << 3);
+
     printf( "PC %x flags %x address %x cntrl %x ",
         $PC, $NZVC, $address, $TopRom[$romaddr] ) if ($debug);
 
@@ -84,14 +92,14 @@ while (1) {
 	printf("%s: A %x B %x Cin %d ", 
 	  $ALUopname[$ALUop], $A, $B, $Cin) if ($debug);
 
-        # Unsigned BCD add
-        if ( $do_bcd && ( $ALUop eq DADD ) ) {
+        # BCD operations
+        if ( ($ALUop eq DADD) || ($ALUop eq DSUB) ) {
 
-            # Result is zero for inputs > 9
+            # Result is zero for any input > 9
             if ( ( $A > 9 ) || ( $B > 9 ) ) {
                 $result = 0;
             } else {
-                $result = $A + $B + $Cin;
+                $result = ($ALUop eq DADD) ? $A + $B + $Cin : $A - $B - $Cin;
             }
 
             # Work out any carry and zero. Never negative or overflow
@@ -99,6 +107,10 @@ while (1) {
             if ( $result > 9 ) {
                 $c      = 1;
                 $result = $result - 10;    # Back to single digit
+            }
+            if ( $result < 0 ) {
+                $c      = 1;
+                $result = $result + 10;    # Back to single digit
             }
             $z = 1 if ( $result == 0 );
             $NZVC = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c;
@@ -115,6 +127,13 @@ while (1) {
           $result = $A + $B + $Cin if ( $ALUop eq ADD );
           $result = $A - $B - $Cin if ( $ALUop eq SUB );
           $result = $A + 1  	 if ( $ALUop eq INCA );
+          $result = 0  	 	 if ( $ALUop eq ZERO );
+          $result = 0  	 	 if ( $ALUop eq BFLAGS );
+          $result = $A % $B  	 if ( $ALUop eq MOD );
+          $result = int($A / $B) if ( $ALUop eq DIV );
+          $result = ($A * $B) % 0xf if ( $ALUop eq MULLO );
+          $result = ($A * $B) >>4 if ( $ALUop eq MULHI );
+
           my $bit5 = $result & 0x10;
           $result &= 0xf;
 
@@ -131,6 +150,10 @@ while (1) {
           # Inputs have same sign, different from result sign
           $v = 1 if ( ( $asign == $bsign ) && ( $rsign != $asign ) );
           $NZVC = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c;
+
+	  # But override all of the above for BFLAGS
+	  $NZVC= $B if ( $ALUop eq BFLAGS );
+
           $Ram[$address] = $result;
           printf( "RAM %x now %x, NZVC %x",
 		$address, $result, $NZVC ) if ($debug);
