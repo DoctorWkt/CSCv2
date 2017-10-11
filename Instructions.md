@@ -247,3 +247,48 @@ I've numbered each line, and each line is described after the code.
    ASCII digits '0' .. '9' in the A/B registers.
 
 6. Print out the ASCII character in the A/B registers to the UART.
+
+## Function Calls
+
+Even though the CPU architecture is Harvard style, there is a way to 
+perform function calls as long as there are only 16 callers or less to
+the function.
+
+It works as follows. Each function caller loads a "caller id" into either
+the A or B register before jumping to the function. The function saves the
+caller id. Just before the end of the function, the function loads the
+stored caller id into the Flags register with an instruction sequence
+ending with a *TBF* instruction.
+
+The Flags register now holds one of the sixteen caller ids. We can now use
+a 2-dimensional instruction to jump back to the instruction following the
+original function call. Here is an example of two function calls followed
+by the function itself.
+
+```
+caller:	EQU 0		# Id of the function caller
+
+# Print digit 2 and newline
+	LCA 0		# Caller id
+	LCB 2
+	JMP printdigit
+enddigit2:
+
+# Print digit 4 and newline
+	LCA 1		# Caller id
+	LCB 4
+	JMP printdigit
+enddigit4:
+
+	. . .
+
+# Function to print a digit followed by a newline
+printdigit: SMA caller	# Save caller id
+	LCA 3
+	DAB 0		# Print the digit, load 0 into A
+	LCB 10
+	DMAB caller	# Print newline, get caller id
+	TBF		# Transfer caller to flags
+			# Jump based on flags value
+	nzvc JMP enddigit2 | nzvC JMP enddigit4
+```
