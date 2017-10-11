@@ -116,6 +116,47 @@ loop2:	LCA	five
 	JMP	loop1
 ```
 
+As there is no *HALT* instruction, you should end your programs with
+an infinite loop, e.g.
+
+```
+end:	JMP	end
+```
+
+The *csim* simulator recognises a jump to the current program counter
+value and exits the simulation.
+
+## ALU Flags
+
+Any ALU operation that is written to RAM sets the value of the
+Flags register. This has four bits:
+
+  * N: set if the ALU result is negative
+  * Z: set if the ALU result is zero
+  * V: set if there was an overflow
+  * Z: set if there was a carry
+
+All ALU operations may set the negative (N) and zero (Z) flags.
+The the overflow (V) flag is set when the signed A and B 
+values have one sign (positive or negative) and the result
+has a different sign. Note that the BCD operations do not
+set the overflow (V) flag.
+
+The carry (C) flag is set when the result does not fit into four
+bits. ALU operations that may set the carry (C) flag are:
+
+  * addition, subtraction and multiplication of any type
+  * incrementing A's value
+
+Finally, the TBF instruction sets the four NZVC flag bits to
+be the value of the B register.
+
+The Flags register retains its value until it is overwritten.
+The conditional jump instructions can be used to jump to an
+instruction location based on the various combinations of the
+Flags register.
+
+
 ## 2-Dimensional Instructions
 
 To be written
