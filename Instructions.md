@@ -69,7 +69,7 @@ explicit (or implicit) address operand.
 | TBA        |   Y   |  Transfer B to B				  |
 | TBF        |   Y   |  Transfer B to flags			  |
 | XORM addr  |   Y   |  Store A ^ B into RAM			  |
-| ZEROM      |   Y   |  Store zero into RAM			  |
+| ZEROM addr |   Y   |  Store zero into RAM			  |
 
 ## Assembler Comments
 
