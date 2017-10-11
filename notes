@@ -71,3 +71,7 @@ I've added some more CPU instructions that use the new ALU operations.
 I've just added the extra wire from the top ROM Asel output to A12 of
 the ALU ROM. This is the "bank select" control line for the two banks
 of eight ALU operations.
+
+Hmm, I noticed that fibminsky stopped working. It was my change to
+the CLC control lines. I've reverted to the old set of control lines,
+but I should work out why it isn't working with the new ones.
