@@ -25,51 +25,51 @@ register is altered by the instruction. This also
 indicates if the ALU result is written into RAM at the
 explicit (or implicit) address operand.
 
-| Mnemonic | Flags | Comment                                    |
-|:--------:|:-----:|--------------------------------------------|
-|   ADDMB  |   Y   |  Store A + B into RAM and also into B      |
-|   ADDM   |   Y   |  Store A + B into RAM			|
-|   ANDM   |   Y   |  Store A & B into RAM			|
-|   CLC    |   Y   |  Clear carry flag, set zero flag		|
-|   DAB    |       |  Display A and B, load A & B with constant	|
-|   DADDM  |   Y   |  Store BCD A + B into RAM			|
-|   DIVM   |   Y   |  Store A / B into RAM			|
-|   DMAB   |       |  Display A and B, load A & B from memory	|
-|   DSUBM  |   Y   |  Store BCD A - B into RAM			|
-|   HMULM  |   Y   |  Store A * B (high nibble) into RAM	|
-|   JCC    |       |  Jump if C clear				|
-|   JCS    |       |  Jump if C set				|
-|   JEQ    |       |  Jump if equal to zero			|
-|   JGE    |       |  Jump if >= zero				|
-|   JGT    |       |  Jump if greater than 0			|
-|   JLE    |       |  Jump if <= zero				|
-|   JLT    |       |  Jump if less than zero			|
-|   JMP    |       |  Jump always				|
-|   JNC    |       |  Jump if N clear				|
-|   JNE    |       |  Jump if not equal to 0			|
-|   JNS    |       |  Jump if N set				|
-|   JVC    |       |  Jump if V clear				|
-|   JVS    |       |  Jump if V set				|
-|   JZC    |       |  Jump if Z clear				|
-|   JZS    |       |  Jump if Z set				|
-|   LCA    |       |  Load constant into A			|
-|   LCB    |       |  Load constant into B			|
-|   LMA    |       |  Load B from RAM				|
-|   LMB    |       |  Load B from RAM				|
-|   LMULM  |   Y   |  Store A * B (low nibble) into RAM		|
-|   MODM   |   Y   |  Store A % B into RAM			|
-|   NOP    |       |  No operation				|
-|   ORM    |   Y   |  Store A OR B into RAM			|
-|   SMA    |   Y   |  Store A into RAM				|
-|   SMBA   |   Y   |  Store A into RAM and B			|
-|   SMB    |   Y   |  Store B into RAM				|
-|   SMIA   |   Y   |  Store A + 1 into RAM			|
-|   SUBM   |   Y   |  Store A - B into RAM			|
-|   TAB    |   Y   |  Transfer A to B				|
-|   TBA    |   Y   |  Transfer B to B				|
-|   TBF    |   Y   |  Transfer B to flags			|
-|   XORM   |   Y   |  Store A ^ B into RAM			|
-|   ZEROM  |   Y   |  Store zero into RAM			|
+|  Mnemonic  | Flags | Comment                                    |
+|:----------:|:-----:|--------------------------------------------|
+| ADDMB addr |   Y   |  Store A + B into RAM and also into B      |
+| ADDM addr  |   Y   |  Store A + B into RAM			  |
+| ANDM addr  |   Y   |  Store A & B into RAM			  |
+| CLC        |   Y   |  Clear carry flag, set zero flag		  |
+| DAB const  |       |  Display A and B, load A & B with constant |
+| DADDM addr |   Y   |  Store BCD A + B into RAM		  |
+| DIVM addr  |   Y   |  Store A / B into RAM			  |
+| DMAB addr  |       |  Display A and B, load A & B from memory	  |
+| DSUBM addr |   Y   |  Store BCD A - B into RAM		  |
+| HMULM addr |   Y   |  Store A * B (high nibble) into RAM	  |
+| JCC addr   |       |  Jump if C clear				  |
+| JCS addr   |       |  Jump if C set				  |
+| JEQ addr   |       |  Jump if equal to zero			  |
+| JGE addr   |       |  Jump if >= zero				  |
+| JGT addr   |       |  Jump if greater than 0			  |
+| JLE addr   |       |  Jump if <= zero				  |
+| JLT addr   |       |  Jump if less than zero			  |
+| JMP addr   |       |  Jump always				  |
+| JNC addr   |       |  Jump if N clear				  |
+| JNE addr   |       |  Jump if not equal to 0			  |
+| JNS addr   |       |  Jump if N set				  |
+| JVC addr   |       |  Jump if V clear				  |
+| JVS addr   |       |  Jump if V set				  |
+| JZC addr   |       |  Jump if Z clear				  |
+| JZS addr   |       |  Jump if Z set				  |
+| LCA const  |       |  Load constant into A			  |
+| LCB const  |       |  Load constant into B			  |
+| LMA addr   |       |  Load A from RAM				  |
+| LMB addr   |       |  Load B from RAM				  |
+| LMULM addr |   Y   |  Store A * B (low nibble) into RAM	  |
+| MODM addr  |   Y   |  Store A % B into RAM			  |
+| NOP        |       |  No operation				  |
+| ORM addr   |   Y   |  Store A OR B into RAM			  |
+| SMA addr   |   Y   |  Store A into RAM			  |
+| SMBA addr  |   Y   |  Store A into RAM and B			  |
+| SMB addr   |   Y   |  Store B into RAM			  |
+| SMIA addr  |   Y   |  Store A + 1 into RAM			  |
+| SUBM addr  |   Y   |  Store A - B into RAM			  |
+| TAB        |   Y   |  Transfer A to B				  |
+| TBA        |   Y   |  Transfer B to B				  |
+| TBF        |   Y   |  Transfer B to flags			  |
+| XORM addr  |   Y   |  Store A ^ B into RAM			  |
+| ZEROM      |   Y   |  Store zero into RAM			  |
 
 ## Assembler Comments
 
