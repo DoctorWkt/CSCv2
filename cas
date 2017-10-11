@@ -19,7 +19,7 @@ use constant {
     ALUxor   => 0x0400,
     ALUinca  => 0x0500,
     ALUbflags => 0x0600,
-    ALUzero  => 0x7000,
+    ALUzero  => 0x0700,
     ALUadd   => 0x4000,	   # We borrow Asel for the upper ALU ops
     ALUsub   => 0x4100,
     ALUpassa => 0x4200,
@@ -62,7 +62,7 @@ my %Inst = (
     MODM =>  PCincr + ALUmod + RAMwrite,              # Store A % B into RAM
     SMA   => PCincr + ALUpassa + RAMwrite,            # Store A into RAM
     SMIA  => PCincr + ALUinca + RAMwrite,             # Store A + 1 into RAM
-    CLC   => PCincr + ALUpassa + RAMwrite,            # Clear carry
+    CLC   => PCincr + ALUzero + RAMwrite,            # Clear carry
     SMB   => PCincr + ALUpassb + RAMwrite,            # Store B into RAM
     SMBA  => PCincr + ALUpassa + RAMwrite + Bload,    # Store A into RAM and B
     TAB   => PCincr + ALUpassa + RAMwrite + Bload,    # Transfer A to B

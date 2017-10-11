@@ -75,3 +75,6 @@ of eight ALU operations.
 Hmm, I noticed that fibminsky stopped working. It was my change to
 the CLC control lines. I've reverted to the old set of control lines,
 but I should work out why it isn't working with the new ones.
+
+Found it. I had a typo on the definition of ZERO, so the new CLC
+which uses ALUzero was not right. Fixed.
