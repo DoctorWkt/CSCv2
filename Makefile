@@ -9,8 +9,8 @@ all: alu.rom toprom.rom
 alu.rom: gen_alu
 	./gen_alu
 
-toprom.rom: fibminsky.s
-	./cas fibminsky.s
+toprom.rom: Examples/fibminsky.s
+	./cas Examples/fibminsky.s
 
 clean:
 	rm -f *.rom *.img
