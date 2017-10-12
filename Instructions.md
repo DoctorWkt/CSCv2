@@ -213,19 +213,22 @@ This requires the code to map nibble values 0x0 .. 0x9 to the ASCII values
 I've numbered each line, and each line is described after the code.
 
 ```
-1.       LCA  7
-2.       LMB  10
-3.       ADDMB                           # B=B+7, flags set
-4.       LMB  10 | xzxC NOP              # Reload the digit if 0-9
-5.       LCA  3  | xzxC LCA  4
-6.       DAB
+1.	 CLC				# Clear carry before the add
+2.       LCA  7
+3.       LMB  10
+4.       ADDMB                           # B=B+7, flags set
+5.       LMB  10 | xzxC NOP              # Reload the digit if 0-9
+6.       LCA  3  | xzxC LCA  4
+7.       DAB
 ```
 
-1. Load constant 7 into A. Why 7? Read on.
+1. Clear the carry so the ADDM won't be affected by a carry in.
 
-2. Load the nibble to print from location 10.
+2. Load constant 7 into A. Why 7? Read on.
 
-3. Add 7 to this nibble and store the result back in B. If the nibble was
+3. Load the nibble to print from location 10.
+
+4. Add 7 to this nibble and store the result back in B. If the nibble was
    0xa (10), then this becomes 17, except that this won't fit in the B
    register, so it becomes 0x1: the low nibble of ASCII 'A' (0x41).
    This will have set the carry (C) flag: in fact, any nibble value from
@@ -238,7 +241,7 @@ I've numbered each line, and each line is described after the code.
    So, nibble values 10 and upwards, when added to 7, set the carry flag.
    Value 9 also does this, but it sets the zero flag as well.
 
-4. If the carry flag is set but not the zero flag (*xzxC*), do nothing.
+5. If the carry flag is set but not the zero flag (*xzxC*), do nothing.
    We keep B+7 in the B register. For all other flag combinations, reload
    the original nibble value into the B register.
 
@@ -246,13 +249,13 @@ I've numbered each line, and each line is described after the code.
    because the nibble value was 10 .. 15, or we have the original nibble
    value in the B register because the nibble value was 0 .. 9.
 
-5. For nibble values 10 and upwards (*xzxC*), set A to 0x4. We now have
+6. For nibble values 10 and upwards (*xzxC*), set A to 0x4. We now have
    the correct ASCII character 'A' .. 'F' in the A/B registers.
 
    For all other nibble values, set A to 0x3. We now have the correct
    ASCII digits '0' .. '9' in the A/B registers.
 
-6. Print out the ASCII character in the A/B registers to the UART.
+7. Print out the ASCII character in the A/B registers to the UART.
 
 ## Function Calls
 
