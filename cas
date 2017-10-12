@@ -60,8 +60,6 @@ my %Inst = (
     HMULM => PCincr + ALUmulhi + RAMwrite,            # Store A * B (hi nibble) into RAM
     DIVM =>  PCincr + ALUdiv + RAMwrite,              # Store A / B into RAM
     MODM =>  PCincr + ALUmod + RAMwrite,              # Store A % B into RAM
-            				# Store zero into RAM, A and B
-    ZEROMAB => PCincr + ALUzero + RAMwrite + Aload + Bload,
     SMA   => PCincr + ALUpassa + RAMwrite,            # Store A into RAM
     SMIA  => PCincr + ALUinca + RAMwrite,             # Store A + 1 into RAM
     CLC   => PCincr + ALUzero + RAMwrite,            # Clear carry

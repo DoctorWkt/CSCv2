@@ -106,4 +106,5 @@ conditional instructions.  Maybe we need to come up with a way to
 consistently name them all :)
 
 Some of them I can see would be useful: ZEROMAB to zero A and B at
-the same time.
+the same time. No, not useful as that implies a DAB, and we can
+already DAB 0 to load A&B with a zero. Removed.
