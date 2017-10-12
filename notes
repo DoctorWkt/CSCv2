@@ -84,3 +84,15 @@ Wednesday 11 October  18:59:16 AEST 2017
 I decided to write up some documentation on the instruction set and
 how to write assembly code, in the form of Instructions.md. I'm
 happy with it now. I've moved the programs into an Examples directory.
+
+Thursday 12 October  19:58:51 AEST 2017
+---------------------------------------
+A good day today. I've worked out how to convert and print an 8-bit
+unsigned number as three decimal digits. Using this, I've been able
+to modify the Minsky code to draw a full circle using VT100 escape
+sequences. Chris suggests using the tek4014 escape sequences to
+draw real pixels, and has sent me a Mandelbrot program so I can see
+the escape sequences. I've updated some of the documentation. I've
+added a -c clockrate option to csim, so I can show it down and make
+it more like the real hardware. So now I can see it draw the circle
+just like the real circuit would.
