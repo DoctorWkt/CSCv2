@@ -15,6 +15,7 @@
         DAB  7
 
 # Second digit
+	CLC				# Clear carry before the ADD
         LMB  11
         ADDMB                           # B=B+7, flags set
         LMB  11 | xzxC NOP              # Reload the digit if 0-9
