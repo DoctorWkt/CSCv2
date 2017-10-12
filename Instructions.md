@@ -138,7 +138,7 @@ Flags register. This register holds four bits:
 
 4-bit binary nibble values are treated as signed values in the range
 -8 to +7 decimal. All ALU operations may set the negative (N)
-and zero (Z) flags. The the overflow (V) flag is set when
+and zero (Z) flags. The overflow (V) flag is set when
 the signed A and B values have one sign (positive or negative)
 and the result has a different sign.
 
