@@ -12,7 +12,7 @@ All instructions have an optional 8-bit operand which can be:
  * a label
 
 If the operand is omitted, then 255 is the implicit
-operand.
+operand. Operand values range from 0 to 255 decimal.
 
 ## Instructions
 
@@ -34,7 +34,7 @@ explicit (or implicit) address operand.
 | DAB const  |       |  Display A and B, load A & B with constant |
 | DADDM addr |   Y   |  Store BCD A + B into RAM		  |
 | DIVM addr  |   Y   |  Store A / B into RAM			  |
-| DMAB addr  |       |  Display A and B, load A & B from memory	  |
+| DMAB addr  |       |  Display A and B, load A & B from RAM	  |
 | DSUBM addr |   Y   |  Store BCD A - B into RAM		  |
 | HMULM addr |   Y   |  Store A * B (high nibble) into RAM	  |
 | JCC addr   |       |  Jump if C clear				  |
@@ -66,7 +66,7 @@ explicit (or implicit) address operand.
 | SMIA addr  |   Y   |  Store A + 1 into RAM			  |
 | SUBM addr  |   Y   |  Store A - B into RAM			  |
 | TAB        |   Y   |  Transfer A to B				  |
-| TBA        |   Y   |  Transfer B to B				  |
+| TBA        |   Y   |  Transfer B to A				  |
 | TBF        |   Y   |  Transfer B to flags			  |
 | XORM addr  |   Y   |  Store A ^ B into RAM			  |
 | ZEROM addr |   Y   |  Store zero into RAM			  |
@@ -82,7 +82,7 @@ assembler. Blank input lines are ignored by the assembler.
 The *cas* assembler provides labels for you to name:
 
   * constants
-  * memory locations
+  * RAM locations
   * jump destination points
 
 To define a label with a value, write your label at the beginning
@@ -136,11 +136,16 @@ Flags register. This register holds four bits:
   * V: set if there was an overflow
   * Z: set if there was a carry
 
-All ALU operations may set the negative (N) and zero (Z) flags.
-The the overflow (V) flag is set when the signed A and B 
-values have one sign (positive or negative) and the result
-has a different sign. Note that the BCD operations do not
-set the overflow (V) flag.
+4-bit binary nibble values are treated as signed values in the range
+-8 to +7 decimal. All ALU operations may set the negative (N)
+and zero (Z) flags. The the overflow (V) flag is set when
+the signed A and B values have one sign (positive or negative)
+and the result has a different sign.
+
+4-bit BCD nibble values are treated as unsigned values in the range
+0 to 9 decimal.  The BCD operations do not set the negative (N) or
+overflow (V) flag. If you try to do a BCD operation when one or the
+inputs is out of the 0 to 9 range, the result is zero.
 
 The carry (C) flag is set when the result does not fit into four
 bits. ALU operations that may set the carry (C) flag are:
@@ -192,7 +197,7 @@ If the line starts with an instruction with no flags keyword, then this
 instruction is filled in at all sixteen positions. Further instructions
 can then replace this original instruction.
 
-An example of this is the manual definition of the JCS instruction:
+An example of this is the explict definition of the JCS instruction:
 
 ```
 	NOP 	| xxxC JMP endloop	# End loop when carry is set
@@ -227,8 +232,8 @@ I've numbered each line, and each line is described after the code.
    9 up to 15 will set the carry flag.
 
    That's a problem though, as we don't want to convert the nibble value
-   9 into a character. Luckily, 9 + 7 = 16, which sets the carry flag but
-   also turns into 0 and sets the zero (Z) flag.
+   9 into an uppercase character. Luckily, 9 + 7 = 16, which sets the
+   carry flag but also turns into 0 and sets the zero (Z) flag.
 
    So, nibble values 10 and upwards, when added to 7, set the carry flag.
    Value 9 also does this, but it sets the zero flag as well.
