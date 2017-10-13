@@ -85,13 +85,13 @@ The *cas* assembler provides labels for you to name:
   * RAM locations
   * jump destination points
 
-To define a label with a value, write your label at the beginning
+To associate a label with a value, write your label at the beginning
 of the line, followed by a colon, then the EQU pseudo-op and the value.
 Example:
 
 ```
-num1:	EQU	34	# Store num1 in location 34
-five:	EQU	5	# The constant 5
+num1:	EQU	34	# Associate num1 as location 34
+five:	EQU	5	# Associate five as the constant 5
 ```
 
 Later on in your program, you can write
