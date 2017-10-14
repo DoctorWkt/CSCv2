@@ -108,3 +108,23 @@ consistently name them all :)
 Some of them I can see would be useful: ZEROMAB to zero A and B at
 the same time. No, not useful as that implies a DAB, and we can
 already DAB 0 to load A&B with a zero. Removed.
+
+Saturday 14 October  15:28:38 AEST 2017
+---------------------------------------
+I'm working on a program that enumerates all winning tic tac toe
+boards where X moves first. Had some trouble squeezing it into
+the 256 instruction limit. Getting close. I can now find this:
+181
+818
+100
+
+but the code progresses on to do this:
+
+181
+818
+110
+
+Not sure why yet. OK, fixed, and the number of winning boards is
+exactly the same as my Perl version, so I'm really happy that the
+program produces a correct result.
+
