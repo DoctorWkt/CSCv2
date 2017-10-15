@@ -102,7 +102,10 @@ movedisk:
 	DAB
 	LMB diskcaller	# Return
 	TBF
-	nzvc JMP diskret0 | nzvC JMP diskret1 | nzVc JMP diskret2 | nzVC JMP diskret3 | nZvc JMP diskret4 | nZvC JMP diskret5 | nZVc JMP diskret6 | nZVC JMP diskret7 | Nzvc JMP diskret8 | NzvC JMP diskret9
+	nzvc JMP diskret0 | nzvC JMP diskret1 | nzVc JMP diskret2 | \
+		nzVC JMP diskret3 | nZvc JMP diskret4 | nZvC JMP diskret5 | \
+		nZVc JMP diskret6 | nZVC JMP diskret7 | Nzvc JMP diskret8 | \
+		NzvC JMP diskret9
 
 movestack2:
 	# This is effectively the base case for us.

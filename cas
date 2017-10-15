@@ -35,6 +35,8 @@ my $linenum = 0;           # Line number being parsed
 my $PC      = 0;           # Program counter
 my $nopcode = PCincr;      # NOP control lines
 my @ROM;                   # Storage for final machine code
+my @Line;		   # Array of whole lines from input file
+my @Linenum;		   # Line number for each line in @Line
 
 # Some control lines are active low. Set an initial bitfield
 # with these lines high. Then flip all the active lines
@@ -309,22 +311,30 @@ die("Usage: $0 [-d] infile\n") if ( @ARGV != 1 );
 generate_nzvc_values();
 
 # Read in the instructions
-my @Line;
+my $l="";			# Input line, accumulates continuing lines
+$linenum=0;
 open( my $IN, "<", $ARGV[0] ) || die("Cannot read $ARGV[0]: $!\n");
 while (<$IN>) {
-    chomp;
-    s{#.*}{};     	# Lose comments
-    s{\s+$}{};    	# Lose trailing whitespace
-    next if (m{^$});    # Ignore empty lines
-    push( @Line, $_ );
+    chomp; $linenum++;
+    s{#.*}{};     		# Lose comments
+    s{^\s+}{};    		# Lose leading whitespace
+    s{\s+$}{};    		# Lose trailing whitespace
+    $l= $l . $_;		# Append to any continuing line
+    next if ($l=~ m{^$});    	# Ignore empty lines
+    if ($l=~ m{^(.*)\\$}) {	# If line ends with a \
+      $l= $1; next;		# trim it off and loop back now
+    }
+    push( @Line, $l );  	# Save the completed line and its line number
+    push( @Linenum, $linenum );
+    $l=""; 			# Reset for next line
 }
 close($IN);
 
 # First pass: find the labels
 $PC      = 0;
-$linenum = 0;
-foreach my $line (@Line) {
-    $linenum++;
+foreach my $i (0 .. (@Line - 1)) {
+    my $line= $Line[$i];
+    $linenum= $Linenum[$i];
     my ( $label, @instlist ) = parse_line($line);
 
     # Get reference to the first instruction on the line
@@ -351,9 +361,9 @@ foreach my $line (@Line) {
 
 # Second pass: assemble
 $PC      = 0;
-$linenum = 0;
-foreach my $line (@Line) {
-    $linenum++;
+foreach my $i (0 .. (@Line - 1)) {
+    my $line= $Line[$i];
+    $linenum= $Linenum[$i];
 
     # Get the instructions on this line
     my ( $label, @instlist ) = parse_line($line);
