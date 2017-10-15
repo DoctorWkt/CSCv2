@@ -71,9 +71,19 @@ push:
             LCB 0
 pushloop:   SMB
             TBF
-            nzvc LMA stack1 | nzvC LMA stack2 | nzVc LMA stack3 | nzVC LMA stack4 | nZvc LMA stack5 | nZvC LMA stack6 | nZVc LMA stack7 | nZVC LMA stack8 | Nzvc LMA stack9 | NzvC LMA stackA |	NzVc LMA stackB | NzVC LMA stackC | NZvc LMA stackD | NZvC LMA stackE | NZVc LMA stackF | NZVC LMA TEMP1
+            nzvc LMA stack1 | nzvC LMA stack2 | nzVc LMA stack3 | \
+		nzVC LMA stack4 | nZvc LMA stack5 | nZvC LMA stack6 | \
+		nZVc LMA stack7 | nZVC LMA stack8 | Nzvc LMA stack9 | \
+		NzvC LMA stackA | NzVc LMA stackB | NzVC LMA stackC | \
+		NZvc LMA stackD | NZvC LMA stackE | NZVc LMA stackF | \
+		NZVC LMA TEMP1
             TBF
-            nzvc SMA stack0 | nzvC SMA stack1 | nzVc SMA stack2 | nzVC SMA stack3 | nZvc SMA stack4 | nZvC SMA stack5 | nZVc SMA stack6 | nZVC SMA stack7 | Nzvc SMA stack8 | NzvC SMA stack9 |	NzVc SMA stackA | NzVC SMA stackB | NZvc SMA stackC | NZvC SMA stackD | NZVc SMA stackE | NZVC SMA stackF
+            nzvc SMA stack0 | nzvC SMA stack1 | nzVc SMA stack2 | \
+		nzVC SMA stack3 | nZvc SMA stack4 | nZvC SMA stack5 | \
+		nZVc SMA stack6 | nZVC SMA stack7 | Nzvc SMA stack8 | \
+		NzvC SMA stack9 | NzVc SMA stackA | NzVC SMA stackB | \
+		NZvc SMA stackC | NZvC SMA stackD | NZVc SMA stackE | \
+		NZVC SMA stackF
             CLC
             LCA 1
             ADDMB
@@ -99,9 +109,19 @@ pop:
             LCB 0
 poploop:    SMB
             TBF
-            nzvc LMA stackF | nzvC LMA stackE | nzVc LMA stackD | nzVC LMA stackC | nZvc LMA stackB | nZvC LMA stackA | nZVc LMA stack9 | nZVC LMA stack8 | Nzvc LMA stack7 | NzvC LMA stack6 | NzVc LMA stack5 | NzVC LMA stack4 | NZvc LMA stack3 | NZvC LMA stack2 | NZVc LMA stack1 | NZVC LMA stack0
+            nzvc LMA stackF | nzvC LMA stackE | nzVc LMA stackD | \
+		nzVC LMA stackC | nZvc LMA stackB | nZvC LMA stackA | \
+		nZVc LMA stack9 | nZVC LMA stack8 | Nzvc LMA stack7 | \
+		NzvC LMA stack6 | NzVc LMA stack5 | NzVC LMA stack4 | \
+		NZvc LMA stack3 | NZvC LMA stack2 | NZVc LMA stack1 | \
+		NZVC LMA stack0
             TBF
-            nzvc SMA TEMP1  | nzvC SMA stackF | nzVc SMA stackE | nzVC SMA stackD | nZvc SMA stackC | nZvC SMA stackB | nZVc SMA stackA | nZVC SMA stack9 | Nzvc SMA stack8 | NzvC SMA stack7 | NzVc SMA stack6 | NzVC SMA stack5 | NZvc SMA stack4 | NZvC SMA stack3 | NZVc SMA stack2 | NZVC SMA stack1
+            nzvc SMA TEMP1  | nzvC SMA stackF | nzVc SMA stackE | \
+		nzVC SMA stackD | nZvc SMA stackC | nZvC SMA stackB | \
+		nZVc SMA stackA | nZVC SMA stack9 | Nzvc SMA stack8 | \
+		NzvC SMA stack7 | NzVc SMA stack6 | NzVC SMA stack5 | \
+		NZvc SMA stack4 | NZvC SMA stack3 | NZVc SMA stack2 | \
+		NZVC SMA stack1
             CLC
             LCA 1
             ADDMB

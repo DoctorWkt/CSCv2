@@ -128,3 +128,10 @@ Not sure why yet. OK, fixed, and the number of winning boards is
 exactly the same as my Perl version, so I'm really happy that the
 program produces a correct result.
 
+Sunday 15 October  16:59:22 AEST 2017
+-------------------------------------
+I tried to write a recursive towers of Hanoi program, but it hurt my
+brain too much so I unrolled each level as a separate function. Chris
+asked for \ to continue lines, which I have just done. I also fixed
+the wrong line numbers report by cas on errors. Now I've edited the
+example programs to use \.

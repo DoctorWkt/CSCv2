@@ -73,7 +73,9 @@ chompcheck:
 	    TBF
             # decide on how much to add/sub without making things
             # complicated with the BCD arith
-            nzvx LCA 1 | nzVc LCA 2 | nzVC LCA 3 | nZvc LCA 4 | nZvC LCA 5 | nZVc LCA 6 | nZVC LCA 7 | Nzvc LCA 8 | NzvC LCA 9 | NzVc LCA 9 | NzVC LCA 9 | NZxx LCA 9
+            nzvx LCA 1 | nzVc LCA 2 | nzVC LCA 3 | nZvc LCA 4 | nZvC LCA 5 | \
+		nZVc LCA 6 | nZVC LCA 7 | Nzvc LCA 8 | NzvC LCA 9 | \
+		NzVc LCA 9 | NzVC LCA 9 | NZxx LCA 9
             # would also work, and keep things O(ln N)
             #LCA 1 | xxVc LCA 2 | xZvc LCA 4 | xzvc LCA 8
 
