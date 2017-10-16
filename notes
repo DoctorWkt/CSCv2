@@ -135,3 +135,9 @@ brain too much so I unrolled each level as a separate function. Chris
 asked for \ to continue lines, which I have just done. I also fixed
 the wrong line numbers report by cas on errors. Now I've edited the
 example programs to use \.
+
+Tue 17 Oct 07:40:26 AEST 2017
+-----------------------------
+Over the past few days I've written a program to print out a
+couple of stanzas of "Mel the Programmer", and also a Bubblesort
+program. Nothing much else.
