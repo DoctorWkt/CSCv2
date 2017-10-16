@@ -17,8 +17,8 @@ temp: 	 EQU 254	# Temp location used in swaps
 	SMA 	2
 	LCA 3
 	SMA 	3
-	LCA 8
-	SMA 	12
+	LCA 13
+	SMA 	4
 	LCA 1
 	SMA 	5
 	LCA 10
@@ -33,8 +33,8 @@ temp: 	 EQU 254	# Temp location used in swaps
 	SMA 	10
 	LCA 12
 	SMA 	11
-	LCA 13
-	SMA 	4
+	LCA 8
+	SMA 	12
 	LCA 9
 	SMA 	13
 	LCA 2
