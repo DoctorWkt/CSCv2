@@ -26,10 +26,16 @@ use constant {
     MOD   => 15,	# A % B binary
 };
 
-my @ALUopname= ( 'DADD', 'DSUB', 'AND', 'OR',
-		 'XOR', 'INCA', 'BFLAGS', 'ZERO',
-		 'ADD', 'SUB', 'PASSA', 'PASSB',
-		 'MULLO', 'MULHI', 'DIV', 'MOD' );
+my @ALUopname= ( 'DADD ', 'DSUB ', 'AND  ', 'OR   ',
+		 'XOR  ', 'INCA ', 'BFLGS', 'ZERO ',
+		 'ADD  ', 'SUB  ', 'PASSA', 'PASSB',
+		 'MULLO', 'MULHI', 'DIV  ', 'MOD  ' );
+
+my @FLstr= ( 'nzvc', 'nzvC', 'nzVc', 'nzVC',
+	     'nZvc', 'nZvC', 'nZVc', 'nZVC',
+             'Nzvc', 'NzvC', 'NzVc', 'NzVC',
+	     'NZvc', 'NZvC', 'NZVc', 'NZVC',
+);
 
 my @TopRom;
 my @BotRom;
@@ -79,26 +85,28 @@ while (1) {
     # Include Asel as part of the ALUop
     $ALUop= $ALUop + ($Asel << 3);
 
-    printf( "PC %x flags %x address %x cntrl %x ",
-        $PC, $NZVC, $address, $TopRom[$romaddr] ) if ($debug);
+    printf( "PC %02x %s address %02x cntrl %02x",
+        $PC, $FLstr[$NZVC], $address, $TopRom[$romaddr] ) if ($debug);
 
     if ($PCincr) {
         $PC++;
     } else {
         exit(0) if ( $PC == $address );
         $PC = $address;
+        printf( ", JXX    PC now %x", $PC) if ($debug);
     }
 
     if ( ($Aload==0) && ($Bload==0) ) {
-        print( chr( ( $A << 4 ) + $B ) );
-        printf( "Printed %x ", ( $A << 4 ) + $B ) if ($debug);
+        print( chr( ( $A << 4 ) + $B ) ) if (!$debug);
+        printf( ", Printed %x '%s'", ( $A << 4 ) + $B,
+		chr( ( $A << 4 ) + $B ) ) if ($debug);
     }
 
     # ALU instruction
     if ($RAMwrite==0) {		# Active low
         my $result;
 	my $Cin= $NZVC & 1;
-	printf("%s: A %x B %x Cin %d ", 
+	printf(", %s: A %x B %x Cin %d", 
 	  $ALUopname[$ALUop], $A, $B, $Cin) if ($debug);
 
         # BCD operations
@@ -124,8 +132,8 @@ while (1) {
             $z = 1 if ( $result == 0 );
             $NZVC = ( $n << 3 ) + ( $z << 2 ) + ( $v << 1 ) + $c;
             $Ram[$address] = $result;
-            printf( "RAM %x now %x, NZVC %x\n",
-		$address, $result, $NZVC ) if ($debug);
+            printf( ", RAM %02x now %x, %s",
+		$address, $result, $FLstr[$NZVC] ) if ($debug);
         } else {
 
           $result = $A & $B 	 if ( $ALUop eq AND );
@@ -164,21 +172,21 @@ while (1) {
 	  $NZVC= $B if ( $ALUop eq BFLAGS );
 
           $Ram[$address] = $result;
-          printf( "RAM %x now %x, NZVC %x",
-		$address, $result, $NZVC ) if ($debug);
+          printf( ", RAM %02x now %x, %s",
+		$address, $result, $FLstr[$NZVC] ) if ($debug);
         }
     }
 
     if ($Aload==0) {	# Active low
         if   ($Asel) { $A = $Ram[$address]; }
         else         { $A = $address & 0xf; }
-        printf( "A now %x ", $A ) if ($debug);
+        printf( ", Aload  A now %x", $A ) if ($debug);
     }
 
     if ($Bload==0) {	# Active low
         if   ($Asel) { $B = $Ram[$address]; }
         else         { $B = $address & 0xf; }
-        printf( "B now %x ", $B ) if ($debug);
+        printf( ", Bload  B now %x", $B ) if ($debug);
     }
     usleep($udelay) if ($udelay);
 
