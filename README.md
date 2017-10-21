@@ -1,4 +1,5 @@
-# CrazySmallCPU
+# Crazy Small CPU, version 2
+
 This repository holds the files associated with Warren's crazy small
 breadboard CPU built with only eleven chips. For more details on the design of
 the CPU itself, see the
