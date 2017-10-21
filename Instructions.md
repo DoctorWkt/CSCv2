@@ -75,7 +75,9 @@ explicit (or implicit) address operand.
 
 In the assembly input, a comment starts at a hash character (#)
 and continues to the end of the line. All of this is ignored by the
-assembler. Blank input lines are ignored by the assembler.
+*cas* assembler. Blank input lines are ignored by the assembler. The
+assembler supports backslash '\' characters to continue a single
+line over multiple lines.
 
 ## Labels and The EQU Pseudo-op
 
