@@ -4,7 +4,6 @@ reg clock;
 // Declare inputs as regs and outputs as wires
 reg  [7:0] PC;
 reg  [3:0] NZVC;
-reg        enable;
 wire [2:0] ALUop;
 wire       PCincr;
 wire       Aload;
@@ -17,10 +16,9 @@ initial begin
   $dumpfile("test.vcd");
   $dumpvars(0, toprom_tb);
   $display ("time\tPC NZVC en ALUop PCincr Aload Bload Asel RAMwr");
-  $monitor ("%g\t%h %b  %b     %h    %b     %b     %b     %b    %b", 
-	  $time, PC, NZVC, enable, ALUop, PCincr, Aload, Bload, Asel, RAMwrite);
+  $monitor ("%g\t%h %b      %h    %b     %b     %b     %b    %b", 
+	  $time, PC, NZVC, ALUop, PCincr, Aload, Bload, Asel, RAMwrite);
   clock = 1;       // initial value of clock
-  enable=0;
   PC=0;
   NZVC=0;
   #2 PC=1;
@@ -38,7 +36,6 @@ end
 toprom U_toprom (
         PC,             // PC's value
         NZVC,           // Flags value
-        enable,         // Enable, active low
         ALUop,          // Outputs
         PCincr,
         Aload,
