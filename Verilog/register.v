@@ -1,5 +1,6 @@
 // 4-bit register
 // (c) 2017 Warren Toomey, GPL3
+
 module register (
 	clk,		// Clock input
 	load,		// Load line (active low)
@@ -19,7 +20,7 @@ module register (
 
   // Output is a register, obviously
   reg [3:0] result;
-  initial result = 0;
+  initial result= 0;
 
   always @(posedge clk) begin
     if (load==0)

@@ -11,9 +11,9 @@ module ram (
     we		// Write enable, active low
   ); 
 
-  parameter DATA_WIDTH = 4 ;
-  parameter ADDR_WIDTH = 8 ;
-  parameter RAM_DEPTH = 1 << ADDR_WIDTH;
+  parameter DATA_WIDTH= 4 ;
+  parameter ADDR_WIDTH= 8 ;
+  parameter RAM_DEPTH= 1 << ADDR_WIDTH;
 
   // Input Ports
   input                  clk;
@@ -31,15 +31,15 @@ module ram (
   reg [DATA_WIDTH-1:0] mem [0:RAM_DEPTH-1];
 
   // Tri-State Buffer control 
-  // output : When we = 1
-  assign data = (we) ? mem[address] : 4'bz; 
+  // output : When we == 1
+  assign data= (we) ? mem[address] : 4'bz; 
 
   // Memory Write Block 
-  // Write Operation : When we = 0
+  // Write Operation : When we == 0
   always @ (posedge clk)
   begin : MEM_WRITE
     if ( !we ) begin
-      mem[address] = data;
+      mem[address]= data;
       // $display("Wrote %h to addr %h", data, address);
     end
   end

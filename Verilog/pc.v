@@ -1,5 +1,6 @@
 // 8-bit PC
 // (c) 2017 Warren Toomey, GPL3
+
 module pc (
 	clk,		// Clock input
 	PCincr,		// Increment PC
