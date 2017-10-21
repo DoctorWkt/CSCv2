@@ -151,7 +151,7 @@ Flags register. This register holds four bits:
   * N: set if the ALU result is negative
   * Z: set if the ALU result is zero
   * V: set if there was an overflow
-  * Z: set if there was a carry
+  * C: set if there was a carry
 
 4-bit binary nibble values are treated as signed values in the range
 -8 to +7 decimal. All ALU operations may set the negative (N)
@@ -239,7 +239,7 @@ I've numbered each line, and each line is described after the code.
 7.       DAB
 ```
 
-1. Clear the carry so the ADDM won't be affected by a carry in.
+1. Clear the carry so the ADDMB won't be affected by a carry in.
 
 2. Load constant 7 into A. Why 7? Read on.
 
@@ -266,10 +266,9 @@ I've numbered each line, and each line is described after the code.
    because the nibble value was 10 .. 15, or we have the original nibble
    value in the B register because the nibble value was 0 .. 9.
 
-6. For nibble values 10 and upwards (*xzxC*), set A to 0x4. We now have
+6. For nibble values 10 and upwards (*xzxC*), set A to 0x4: we now have
    the correct ASCII character 'A' .. 'F' in the A/B registers.
-
-   For all other nibble values, set A to 0x3. We now have the correct
+   For all other nibble values, set A to 0x3: we now have the correct
    ASCII digits '0' .. '9' in the A/B registers.
 
 7. Print out the ASCII character in the A/B registers to the UART.
