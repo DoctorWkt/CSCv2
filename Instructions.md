@@ -1,6 +1,21 @@
 # Instructions in the Crazy Small CPU Version 2
 
-Here are the current instructions in CSC version 2.
+Here are the details of the input format accepted
+by the *cas* assembler, and the instructions available
+in the Crazy Small CPU version 2.
+
+## Running the *cas* Assembler
+
+Assuming that you have an input file called _myprog.s_, you
+can assemble this by running the command:
+
+```
+./cas myprog.s
+```
+
+This will produce the ROM files:
+ * botrom.rom and toprom.rom, used by Logisim and the *csim* simulator
+ * botrom.img and toprom.img, to be burned to real EEPROMs
 
 ## Operands
 
@@ -76,7 +91,7 @@ explicit (or implicit) address operand.
 In the assembly input, a comment starts at a hash character (#)
 and continues to the end of the line. All of this is ignored by the
 *cas* assembler. Blank input lines are ignored by the assembler. The
-assembler supports backslash '\' characters to continue a single
+assembler supports backslash '\\' characters to continue a single
 line over multiple lines.
 
 ## Labels and The EQU Pseudo-op
