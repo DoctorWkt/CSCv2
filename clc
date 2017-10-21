@@ -1,0 +1,353 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Data::Dumper;
+
+# A very rudimentary compiler for a high-ish level language down
+# to the Crazy CPU assembly language. (c) 2017 Warren Toomey, GPL3.
+
+my $OUT;
+
+# List of operators and instructions
+my %ALUop = (
+    '+' => 'ADDM',
+    '-' => 'SUBM',
+);
+
+# Stack of instructions to emit at the end of each if or loop
+# Each entry is a 2-element list: code and end loop label, or
+# undef for end of if statements
+my @Loopstack;
+
+# Get a new label
+my $nextlabel = 0;
+
+sub newlabel {
+    return ( "L" . $nextlabel++ );
+}
+
+my $varlocn = 0;    # Next location to use for variables
+my %Var;            # List of known variables
+
+# Allocate space for a new variable
+sub addvar {
+    my $var = shift;
+
+    die("$var previously defined\n") if ( defined( $Var{$var} ) );
+    printf( $OUT "%shi:\tEQU %d\n", $var, $varlocn++ );
+    printf( $OUT "%slo:\tEQU %d\n", $var, $varlocn++ );
+    $Var{$var} = 1;
+}
+
+# Check if a variable exists. Die if 2nd argument is true
+sub checkvar {
+    my ( $var, $stop ) = @_;
+
+    if ( !defined( $Var{$var} ) ) {
+        die("$var does not exist\n") if ($stop);
+        return (0);
+    }
+    return (1);
+}
+
+# Given a number, convert to two 4-bit values and return then
+sub num2nibbles {
+    my $N = shift;
+    die("$N oversized\n") if ( ( $N < -128 ) || ( $N > 127 ) );
+    $N = 256 + $N if ( $N < 0 );
+    my $top = ( $N >> 4 );
+    my $bot = ( $N & 0xf );
+    return ( $top, $bot );
+}
+
+# Emit an equality comparison
+sub emit_eqcomparison {
+    my ( $startlabel, $var1, $var2, $jump1, $jump2, $oklabel, $op ) = @_;
+
+    printf( $OUT "$startlabel:\tCLC\t\t# $var1 $op $var2\n" );
+    printf( $OUT "\tLMA %slo\n", $var1 );
+    printf( $OUT "\tLMB %slo\n", $var2 );
+    printf( $OUT "\tSUBM\n" );
+    printf( $OUT "\t$jump1\n" );
+    printf( $OUT "\tLMA %shi\n", $var1 );
+    printf( $OUT "\tLMB %shi\n", $var2 );
+    printf( $OUT "\tSUBM\n" );
+    printf( $OUT "\t$jump2\n" );
+    printf( $OUT "$oklabel:\n" );
+}
+
+# Emit a less-than type comparison
+sub emit_ltcomparison {
+    my ( $startlabel, $var1, $var2, $jump, $op ) = @_;
+
+    printf( $OUT "$startlabel:\tCLC\t\t# $var1 $op $var2\n" );
+    printf( $OUT "\tLMA %slo\n", $var1 );
+    printf( $OUT "\tLMB %slo\n", $var2 );
+    printf( $OUT "\tSUBM\n" );
+    printf( $OUT "\tLMA %shi\n", $var1 );
+    printf( $OUT "\tLMB %shi\n", $var2 );
+    printf( $OUT "\tSUBM\n" );
+    printf( $OUT "\t$jump\n" );
+}
+
+# Emit an operation with the first argument a constant
+sub emit_oneconst_operation {
+    my ( $lvar, $var1, $op, $var2 ) = @_;
+    checkvar( $var2, 1 );
+    my ( $top, $bot ) = num2nibbles($var1);
+    my $aluinstruction = $ALUop{$op};
+    printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
+    printf( $OUT "\tLCA 0x%x\t\t# $lvar = $var1 $op $var2\n", $bot );
+    printf( $OUT "\tLMB %slo\n",                              $var2 );
+    printf( $OUT "\t$aluinstruction %slo\n",                  $lvar );
+    printf( $OUT "\tLCA 0x%x\n",                              $top );
+    printf( $OUT "\tLMB %shi\n",                              $var2 );
+    printf( $OUT "\t$aluinstruction %shi\n",                  $lvar );
+}
+
+die("Usage: $0 file.cl\n") if ( @ARGV != 1 );
+my $outfile = $ARGV[0];
+$outfile =~ s{cl$}{s};
+die("output file name same as input file $outfile\n")
+  if ( $outfile eq $ARGV[0] );
+
+  open( $OUT,   ">", $outfile ) || die("Cannot write $outfile: $!\n");
+  open( my $IN, "<", $ARGV[0] ) || die("Cannot open $ARGV[0]: $!\n");
+  while (<$IN>) {
+    chomp;
+
+    # Lose comments
+    s{\s*//.*}{};
+
+    # Skip empty lines;
+    next if (m{^$});
+
+    # Variable declaration
+    if (m{var\s+(\S+)\s*;}) {
+        my $var = $1;
+        addvar($var);
+        next;
+    }
+
+    # Constant assignment
+    if (m{(\S+)\s*=\s*(\S+)\s*;}) {
+        my ( $var, $val ) = ( $1, $2 );
+        checkvar( $var, 1 );
+        my ( $top, $bot ) = num2nibbles($val);
+        printf( $OUT "\tLCA 0x%x\t\t# $var = $val\n", $top );
+        printf( $OUT "\tSMA %shi\n",                  $var );
+        printf( $OUT "\tLCA 0x%x\n",                  $bot );
+        printf( $OUT "\tSMA %slo\n",                  $var );
+        next;
+    }
+
+    # Two operand operation
+    if (m{(\S+)\s*=\s*(\S+)\s*(\+|\-)\s*(\S+)\s*;}) {
+        my ( $lvar, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
+        checkvar( $lvar, 1 );
+
+        # Second argument is a constant.
+        if ( $var2 =~ m{^\d+$} ) {
+
+            # First is also a constant, we can't do this yet
+            die("Can't $op on two constants\n") if ( $var1 =~ m{^\d+$} );
+
+            # Convert this from var OP constant to constant OP var.
+            # If OP is subtraction, negate the constant and make it
+            # addition
+            if ( $op eq "-" ) {
+                $var2 = -$var2;
+                $op   = "+";
+            }
+            emit_oneconst_operation( $lvar, $var2, $op, $var1 );
+            next;
+        }
+
+        # First argument is a constant
+        if ( $var1 =~ m{^\d+$} ) {
+            emit_oneconst_operation( $lvar, $var1, $op, $var2 );
+            next;
+        }
+
+        # Neither arguments are constants
+        checkvar( $var1, 1 );
+        checkvar( $var2, 1 );
+        my $aluinstruction = $ALUop{$op};
+        printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
+        printf( $OUT "\tLMA %slo\t\t# $lvar = $var1 $op $var2\n", $var1 );
+        printf( $OUT "\tLMB %slo\n",                              $var2 );
+        printf( $OUT "\t$aluinstruction %slo\n",                  $lvar );
+        printf( $OUT "\tLMA %shi\n",                              $var1 );
+        printf( $OUT "\tLMB %shi\n",                              $var2 );
+        printf( $OUT "\t$aluinstruction %shi\n",                  $lvar );
+        next;
+    }
+
+    # While loop/If statement
+    if (m{(if|while)\s*\(\s*(\S+)\s+(\S+)\s+(\S+)\s*\)\s*\{}) {
+        my ( $keyword, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
+
+        checkvar( $var1, 1 );
+        checkvar( $var2, 1 );
+
+        # Get a start label, an end label and an ok label
+        my $startlabel = newlabel();
+        my $endlabel   = newlabel();
+        my $oklabel    = newlabel();
+        if ( $keyword eq "while" ) {
+            push( @Loopstack,
+                [ "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
+        } else {
+            push( @Loopstack, [ "$endlabel:\n", undef ] );
+        }
+
+        if ( $op eq "==" ) {
+            emit_eqcomparison(
+                $startlabel, $var1, $var2, "JNE $endlabel",
+                "JNE $endlabel", $oklabel, $op);
+        }
+
+        if ( $op eq "!=" ) {
+            emit_eqcomparison( $startlabel, $var1, $var2, "JNE $oklabel",
+                "JEQ $endlabel", $oklabel, $op );
+        }
+
+        if ( $op eq "<" ) {
+            emit_ltcomparison( $startlabel, $var1, $var2, "JGE $endlabel",
+                $op );
+        }
+
+        if ( $op eq ">=" ) {
+            emit_ltcomparison( $startlabel, $var1, $var2, "JLT $endlabel",
+                $op );
+        }
+
+        if ( $op eq ">" ) {
+            emit_ltcomparison( $startlabel, $var2, $var1, "JGE $endlabel",
+                $op );
+        }
+
+        if ( $op eq "<=" ) {
+            emit_ltcomparison( $startlabel, $var2, $var1, "JLT $endlabel",
+                $op );
+        }
+        next;
+    }
+
+    # Else statement
+    if (m{\}\s*else\s*\{}) {
+        my $endlabel = newlabel();
+        my $aryref   = pop(@Loopstack);
+        die("Unbalanced else\n") if ( !defined($aryref) );
+        my ( $line, $orignendlabel ) = @{$aryref};
+        push( @Loopstack, [ "$endlabel:\n", undef ] );
+        print( $OUT "\tJMP $endlabel\t\t# Just before else\n" );
+        print( $OUT $line );
+        next;
+    }
+
+    # while (1) statement
+    if (m{while\s*\(\s*1\s*\)\s*\{}) {
+
+        # Get a start label, an end label and an ok label
+        my $startlabel = newlabel();
+        my $endlabel   = newlabel();
+        push( @Loopstack, [ "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
+        printf( $OUT "$startlabel:\t\t\t# while (1)\n" );
+        next;
+    }
+
+    # End of an if or loop
+    if (m{\}}) {
+        my $aryref = pop(@Loopstack);
+        die("Unbalanced else\n") if ( !defined($aryref) );
+        my ( $line, $orignendlabel ) = @{$aryref};
+        die("Unbalanced }\n") if ( !defined($line) );
+        print( $OUT $line );
+        next;
+    }
+
+    # putchar
+    if (m{putchar\((.+)\);}) {
+        my $arg = $1;
+        if ( checkvar( $arg, 0 ) ) {
+            printf( $OUT "\tLCA %slo\t\t# putchar $arg\n", $arg );
+            printf( $OUT "\tSMA\n" );
+            printf( $OUT "\tLMB\n" );
+            printf( $OUT "\tLCA %shi\n", $arg );
+            printf( $OUT "\tDAB\n" );
+        } else {
+            $arg = 10      if ( $arg eq "'\\n'" );
+            $arg = ord($1) if ( $arg =~ m{'(.)'} );
+            my ( $top, $bot ) = num2nibbles($arg);
+            print( $OUT "\tLCA $bot\t\t# putchar $arg\n" );
+            print( $OUT "\tSMA\n" );
+            print( $OUT "\tLMB\n" );
+            print( $OUT "\tLCA $top\n" );
+            print( $OUT "\tDAB\n" );
+        }
+        next;
+    }
+
+    # Postincrement
+    if (m{(\S+)\+\+;}) {
+        my $var1 = $1;
+        checkvar( $var1, 1 );
+        printf( $OUT "\tLMA %slo\t\t# $var1 ++\n", $var1 );
+        printf( $OUT "\tSMIA %slo\n",              $var1 );
+        printf( $OUT "\tLCA 0\n" );
+        printf( $OUT "\tLMB %shi\n",  $var1 );
+        printf( $OUT "\tADDM %shi\n", $var1 );
+        next;
+    }
+
+    # Arithmetic shift right by four
+    if (m{(\S+)\s*=\s*(\S+)\s*>>\s*4;}) {
+        my ( $lvar, $var1 ) = ( $1, $2 );
+        checkvar( $lvar, 1 );
+        checkvar( $var1, 1 );
+        my $neglabel = newlabel();    # When top nibble is -ve
+        my $endlabel = newlabel();    # End of the whole operation
+        printf( $OUT "\tLMA %shi\t\t# $lvar = $var1 >> 4\n", $var1 );
+        printf( $OUT "\tSMA %slo\n",                         $lvar );
+        printf( $OUT "\tJNS %s\n",                           $neglabel );
+        printf( $OUT "\tLCA 0\n" );
+        printf( $OUT "\tSMA %shi\n",   $lvar );
+        printf( $OUT "\tJMP %s\n",     $endlabel );
+        printf( $OUT "%s:\tLCA 0xf\n", $neglabel );
+        printf( $OUT "\tSMA %shi\n",   $lvar );
+        printf( $OUT "%s:\n",          $endlabel );
+        next;
+    }
+
+    # break
+    if (m{break;}) {
+
+        # Get the length of the @Loopstack -1, to get highest index
+        my $i     = @Loopstack - 1;
+        my $found = 0;
+        while ( $i >= 0 ) {
+            my $aryref = $Loopstack[ $i-- ];
+            die("No matching loop end for break, 1\n") if ( !defined($aryref) );
+            my ( $line, $orignendlabel ) = @{$aryref};
+            if ( defined($orignendlabel) ) {
+                printf( $OUT "\tJMP %s\t\t# break\n", $orignendlabel );
+                $found = 1;
+                last;
+            }
+        }
+        die("No matching loop end for break\n") if ( !$found );
+        next;
+    }
+
+    # Exit: inifinite loop
+    if (m{exit;}) {
+        print( $OUT "end:\tJMP end\n" );
+        next;
+    }
+
+    die("Unrecognised line: $_\n");
+}
+close($IN);
+close($OUT);
+exit(0);

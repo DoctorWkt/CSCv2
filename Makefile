@@ -12,5 +12,12 @@ alu.rom: gen_alu
 toprom.rom: Examples/fibminsky.s
 	./cas Examples/fibminsky.s
 
+minsky: Examples/minsky.s cas
+	./cas Examples/minsky.s
+	cp toprom.rom minsky
+
+Examples/minsky.s: Examples/minsky.cl clc
+	./clc Examples/minsky.cl
+
 clean:
-	rm -f *.rom *.img
+	rm -f *.rom *.img minsky Examples/minsky.s
