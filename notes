@@ -163,3 +163,10 @@ So now the Verilog version of the CPU can run fibminsky.s! I'm pretty
 chuffed that I could get a Verilog version up and running. Oh, and I
 can now see the digital lines in GTKwave :) I'll put it up in the
 Github repository soon.
+
+Sunday 22 October  08:50:09 AEST 2017
+-------------------------------------
+Yesterday I decided to make v2 the stable version. I've updated all
+the docs on the minnie and Github sites, and pointed everything to
+the CSCv2 Github site. This morning Chris suggested I try yosys to
+visualise the Verilog synthesis. It all looks good, no glaring errors. 
