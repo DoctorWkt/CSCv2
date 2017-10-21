@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Generate assembly language for BCD Fibonacci for N digits.
+# (c) 2017 Warren Toomey, GPL3.
+
+die("Usage: $0 number\n") if (@ARGV != 1);
+my $N=$ARGV[0];
+
+# Zero the memory of the first two numbers
+sub zero_ram {
+  my ($col)= @_;
+  print("zero:\tLCA 0\t\t# Zero most of the first two nums\n");
+  for (my $i=1; $i<$N; $i++) {
+    printf("\tSMA %d\n",$i);
+    printf("\tSMA %d\n",$i+$col);
+  }
+}
+
+# Initialise the columns
+sub do_init {
+  my ($col, $a, $b, $out)= @_;
+
+  print("start:\tLCA 1\t\t# Initialise the first two nums\n");
+  print("\tSMA $a\n");
+  print("\tSMA $b\n");
+}
+
+# Given a column, the positions of the two input digits and the output
+# digit, print out the code to deal with the carry and to add the two digits
+sub do_column {
+  my ($col, $a, $b, $out)= @_;
+
+  print("col$col:\tLMA $a\t\t# Add the two digits together\n");
+  print("\tLMB $b\n");
+  print("\tDADDM $out\n");
+  if ($col == 1) {
+    print("\tJCS end\t\t# Was a carry, so exit\n");
+  }
+}
+
+# Ripple one column down
+sub do_ripple {
+  my ($col, $a, $b, $out)= @_;
+  
+  if ($col==$N) {
+    print("ripple:\tLMA $b\t\t# Ripple digits down\n");
+  } else {
+    print("\tLMA $b\n");
+  }
+  print("\tSMA $a\n");
+  print("\tLMA $out\n");
+  print("\tSMA $b\n");
+  if ($col==1) {
+    print("\tJMP col$N\n");
+  }
+}
+
+# Print out the column of the sum
+sub do_print {
+  my ($col, $a, $b, $out)= @_;
+  if ($col==1) {
+    print("\tLMB $out\t\t# Print out the sum\n");
+    print("\tLCA 3\n");
+  } else {
+    print("\tLMB $out\n");
+  }
+  print("\tDAB 3\n");
+  if ($col==$N) {
+    print("\tLCA 10\t\t# And a newline\n");
+    print("\tSMA 255\n");
+    print("\tLMB 255\n");
+    print("\tLCA 0\n");
+    print("\tDAB 0\n");
+  }
+}
+
+
+#### MAIN PROGRAM ####
+zero_ram($N);
+do_init($N, 0*$N+$N, 1*$N+$N, 2*$N+$N);
+for (my $col= $N; $col >=1; $col--) {
+  do_column($col, 0*$N+$col, 1*$N+$col, 2*$N+$col);
+}
+for (my $col= 1; $col <=$N; $col++) {
+  do_print($col, 0*$N+$col, 1*$N+$col, 2*$N+$col);
+}
+for (my $col= $N; $col >=1; $col--) {
+  do_ripple($col, 0*$N+$col, 1*$N+$col, 2*$N+$col);
+}
+print("end:\tJMP end\n");
