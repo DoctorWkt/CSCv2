@@ -141,3 +141,25 @@ Tue 17 Oct 07:40:26 AEST 2017
 Over the past few days I've written a program to print out a
 couple of stanzas of "Mel the Programmer", and also a Bubblesort
 program. Nothing much else.
+
+Saturday 21 October  09:04:44 AEST 2017
+---------------------------------------
+I started learning Verilog yesterday and I now have CSCv2 implemented
+but not working in Verilog. Current situation: the control ROMs are
+decoding the instructions, the A/B/Flags registers seem to work, the ALU
+seems to work. I store 1 into RAM location 4 but when I read it back it is
+0. $display shows the store and incorrect read. $monitor seems to show
+an extra write of 0 into RAM location 4.
+
+Saturday 21 October  12:11:22 AEST 2017
+---------------------------------------
+Fixed. I had a data_out reg in ram.v which needed to be a wire. Now
+I'm getting the lsb column of fibminsky.s working but no carry into
+the next column.
+
+That's now fixed too. I wired Cin up to the wrong Flags output bit.
+I found that $write can output ASCII characters without a newline.
+So now the Verilog version of the CPU can run fibminsky.s! I'm pretty
+chuffed that I could get a Verilog version up and running. Oh, and I
+can now see the digital lines in GTKwave :) I'll put it up in the
+Github repository soon.
