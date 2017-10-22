@@ -134,10 +134,19 @@ die("output file name same as input file $outfile\n")
         my ( $var, $val ) = ( $1, $2 );
         checkvar( $var, 1 );
         my ( $top, $bot ) = num2nibbles($val);
-        printf( $OUT "\tLCA 0x%x\t\t# $var = $val\n", $top );
-        printf( $OUT "\tSMA %shi\n",                  $var );
-        printf( $OUT "\tLCA 0x%x\n",                  $bot );
-        printf( $OUT "\tSMA %slo\n",                  $var );
+        print( $OUT "\t\t\t# $var = $val\n");
+        if ($top) {
+          printf( $OUT "\tLCA 0x%x\n", 		        $top );
+          printf( $OUT "\tSMA %shi\n",                  $var );
+        } else {
+          printf( $OUT "\tZEROM %shi\n",                $var );
+        }
+        if ($bot) {
+          printf( $OUT "\tLCA 0x%x\n",                  $bot );
+          printf( $OUT "\tSMA %slo\n",                  $var );
+        } else {
+          printf( $OUT "\tZEROM %slo\n",                $var );
+	}
         next;
     }
 
@@ -271,19 +280,15 @@ die("output file name same as input file $outfile\n")
     if (m{putchar\((.+)\);}) {
         my $arg = $1;
         if ( checkvar( $arg, 0 ) ) {
-            printf( $OUT "\tLCA %slo\t\t# putchar $arg\n", $arg );
-            printf( $OUT "\tSMA\n" );
-            printf( $OUT "\tLMB\n" );
-            printf( $OUT "\tLCA %shi\n", $arg );
+            printf( $OUT "\tLCA %shi\t\t# putchar $arg\n", $arg );
+            printf( $OUT "\tLCB %slo\n", $arg );
             printf( $OUT "\tDAB\n" );
         } else {
             $arg = 10      if ( $arg eq "'\\n'" );
             $arg = ord($1) if ( $arg =~ m{'(.)'} );
             my ( $top, $bot ) = num2nibbles($arg);
-            print( $OUT "\tLCA $bot\t\t# putchar $arg\n" );
-            print( $OUT "\tSMA\n" );
-            print( $OUT "\tLMB\n" );
-            print( $OUT "\tLCA $top\n" );
+            print( $OUT "\tLCA $top\t\t# putchar $arg\n" );
+            print( $OUT "\tLCB $bot\n" );
             print( $OUT "\tDAB\n" );
         }
         next;
@@ -295,9 +300,8 @@ die("output file name same as input file $outfile\n")
         checkvar( $var1, 1 );
         printf( $OUT "\tLMA %slo\t\t# $var1 ++\n", $var1 );
         printf( $OUT "\tSMIA %slo\n",              $var1 );
-        printf( $OUT "\tLCA 0\n" );
-        printf( $OUT "\tLMB %shi\n",  $var1 );
-        printf( $OUT "\tADDM %shi\n", $var1 );
+        printf( $OUT "\tNOP | xxxC LMA %shi\n",	   $var1 );
+        printf( $OUT "\tNOP | xxxC SMIA %shi\n",   $var1 );
         next;
     }
 
@@ -306,17 +310,10 @@ die("output file name same as input file $outfile\n")
         my ( $lvar, $var1 ) = ( $1, $2 );
         checkvar( $lvar, 1 );
         checkvar( $var1, 1 );
-        my $neglabel = newlabel();    # When top nibble is -ve
-        my $endlabel = newlabel();    # End of the whole operation
         printf( $OUT "\tLMA %shi\t\t# $lvar = $var1 >> 4\n", $var1 );
         printf( $OUT "\tSMA %slo\n",                         $lvar );
-        printf( $OUT "\tJNS %s\n",                           $neglabel );
-        printf( $OUT "\tLCA 0\n" );
+        printf( $OUT "\tLCA 0 | Nxxx LCA 0xf\n");
         printf( $OUT "\tSMA %shi\n",   $lvar );
-        printf( $OUT "\tJMP %s\n",     $endlabel );
-        printf( $OUT "%s:\tLCA 0xf\n", $neglabel );
-        printf( $OUT "\tSMA %shi\n",   $lvar );
-        printf( $OUT "%s:\n",          $endlabel );
         next;
     }
 
