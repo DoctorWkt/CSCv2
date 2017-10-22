@@ -170,3 +170,9 @@ Yesterday I decided to make v2 the stable version. I've updated all
 the docs on the minnie and Github sites, and pointed everything to
 the CSCv2 Github site. This morning Chris suggested I try yosys to
 visualise the Verilog synthesis. It all looks good, no glaring errors. 
+
+Sunday 22 October  21:27:23 AEST 2017
+-------------------------------------
+Heh, got 8-bit multiplies to work. I fixed a MULLO bug in the process.
+Chris says he has wired up the CPU, but needs to build a clock signal
+and some output ability.
