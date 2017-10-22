@@ -148,7 +148,7 @@ while (1) {
           $result = 0  	 	 if ( $ALUop eq BFLAGS );
           $result = $A % $B  	 if ( $ALUop eq MOD );
           $result = int($A / $B) if ( $ALUop eq DIV );
-          $result = ($A * $B) % 0xf if ( $ALUop eq MULLO );
+          $result = ($A * $B) & 0xf if ( $ALUop eq MULLO );
           $result = ($A * $B) >>4 if ( $ALUop eq MULHI );
 
           my $bit5 = $result & 0x10;

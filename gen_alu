@@ -18,8 +18,8 @@ use constant {
     SUB   => 9,         # A - B binary
     PASSA => 10,        # A
     PASSB => 11,        # B
-    MULLO => 12,        # A * B binary, high nibble
-    MULHI => 13,        # A * B binary, low nibble
+    MULLO => 12,        # A * B binary, low nibble
+    MULHI => 13,        # A * B binary, high nibble
     DIV   => 14,        # A / B binary
     MOD   => 15,        # A % B binary
 };
@@ -93,7 +93,7 @@ foreach my $Asel ( 0 .. 1 ) {
 		    if ( $ALUop eq DIV ) {
           	        $result = ($B != 0) ? int($A / $B) : 0;	# Div by zero protection
 		    }
-          	    $result = ($A * $B) % 0xf if ( $ALUop eq MULLO );
+          	    $result = ($A * $B) & 0xf if ( $ALUop eq MULLO );
           	    $result = ($A * $B) >> 4 if ( $ALUop eq MULHI );
 
                     my $bit5 = $result & 0x10;
