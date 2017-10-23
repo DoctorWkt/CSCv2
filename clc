@@ -155,7 +155,7 @@ sub end_function {
 sub do_function_call {
     my ( $name, $argument, $lvar ) = @_;
     die("function $name not previously declared\n")
-      if ( !exists( $Funcparam{$name} ) );
+      if ( !exists( $Funccaller{$name} ) );
     print( $OUT "\t\t\t# Call $name\n" );
 
     # Get a caller id
