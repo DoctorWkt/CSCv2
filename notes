@@ -176,3 +176,22 @@ Sunday 22 October  21:27:23 AEST 2017
 Heh, got 8-bit multiplies to work. I fixed a MULLO bug in the process.
 Chris says he has wired up the CPU, but needs to build a clock signal
 and some output ability.
+
+Mon 23 Oct 10:10:41 AEST 2017
+-----------------------------
+I fixed up the clc output to reflect the new v2 architecture. Now I'm
+thinking if I should try to put functions in :) Something like:
+
+function fred(x) {		// Function declaration, x is optional
+}
+
+y= fred(foo);			// Function call, "y=" and "foo" optional
+
+I might start with just functions and local variables.
+
+Mon 23 Oct 14:25:33 AEST 2017
+-----------------------------
+OK, I have functions, function returns, local variables, one function
+parameter and assignment from function returns working. The compiler
+is getting as ugly as sin. But it does work! I could take my h2 compiler
+and modify it if I want to make it a proper compiler.

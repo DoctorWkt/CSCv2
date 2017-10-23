@@ -1,6 +1,8 @@
-  // A working Minsky sine generator
-  // in a semi-high level language
-  // (c) 2017 Warren Toomey, GPL3
+// A working Minsky sine generator
+// in a semi-high level language
+// (c) 2017 Warren Toomey, GPL3
+
+function main() {
   var x;
   var y;
   var i;
@@ -24,3 +26,4 @@
     putchar('*');	// then a "*\n"
     putchar('\n');
   }
+}

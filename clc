@@ -3,8 +3,10 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-# A very rudimentary compiler for a high-ish level language down
-# to the Crazy CPU assembly language. (c) 2017 Warren Toomey, GPL3.
+# A very rudimentary compiler for a
+# high-ish level language down to the
+# Crazy Small CPU assembly language.
+# (c) 2017 Warren Toomey, GPL3.
 
 my $OUT;
 
@@ -14,10 +16,35 @@ my %ALUop = (
     '-' => 'SUBM',
 );
 
+# List of flag combinations
+my @Flag = (
+    'nzvc', 'nzvC', 'nzVc', 'nzVC', 'nZvc', 'nZvC', 'nZVc', 'nZVC',
+    'Nzvc', 'NzvC', 'NzVc', 'NzVC', 'NZvc', 'NZvC', 'NZVc', 'NZVC'
+);
+
 # Stack of instructions to emit at the end of each if or loop
-# Each entry is a 2-element list: code and end loop label, or
-# undef for end of if statements
+# Each entry is a 3-element list: type, code and end loop label.
+# End loop label is undef for if statements. First element
+# is "LOOP", "IF", "FUNC".
 my @Loopstack;
+
+# Function variables: name of current function or undef
+my $funcname;
+
+# Name of function's parameters
+my %Funcparam;
+
+# Next available caller id for each function
+my %Funccaller;
+
+# Get a new caller id for the named function
+sub getcallerid {
+    my $name = shift;
+    die("Unknown function $name\n") if ( !exists( $Funccaller{$name} ) );
+    die("Too many $name callers\n") if ( $Funccaller{$name} == 15 );
+    $Funccaller{$name}++;
+    return ( $Funccaller{$name} );
+}
 
 # Get a new label
 my $nextlabel = 0;
@@ -29,9 +56,10 @@ sub newlabel {
 my $varlocn = 0;    # Next location to use for variables
 my %Var;            # List of known variables
 
-# Allocate space for a new variable
+# Allocate space for a new variable. Prepend the current function name
 sub addvar {
     my $var = shift;
+    $var = $funcname . "." . $var;
 
     die("$var previously defined\n") if ( defined( $Var{$var} ) );
     printf( $OUT "%shi:\tEQU %d\n", $var, $varlocn++ );
@@ -40,14 +68,16 @@ sub addvar {
 }
 
 # Check if a variable exists. Die if 2nd argument is true
+# Return the full variable name or undef
 sub checkvar {
     my ( $var, $stop ) = @_;
+    $var = $funcname . "." . $var;
 
     if ( !defined( $Var{$var} ) ) {
         die("$var does not exist\n") if ($stop);
-        return (0);
+        return (undef);
     }
-    return (1);
+    return ($var);
 }
 
 # Given a number, convert to two 4-bit values and return then
@@ -93,7 +123,6 @@ sub emit_ltcomparison {
 # Emit an operation with the first argument a constant
 sub emit_oneconst_operation {
     my ( $lvar, $var1, $op, $var2 ) = @_;
-    checkvar( $var2, 1 );
     my ( $top, $bot ) = num2nibbles($var1);
     my $aluinstruction = $ALUop{$op};
     printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
@@ -105,15 +134,66 @@ sub emit_oneconst_operation {
     printf( $OUT "\t$aluinstruction %shi\n",                  $lvar );
 }
 
+# Deal with the end of a function
+sub end_function {
+    my @retlist;
+
+    # Build list of return jumps
+    printf( $OUT "%sret:\tLMB %scaller\n", $funcname, $funcname );
+    print( $OUT "\tTBF\n" );
+    foreach my $i ( 0 .. 15 ) {
+        push( @retlist, $Flag[$i] . " JMP " . $funcname . "ret" . $i );
+    }
+    print( $OUT "\t" . join( " | ", @retlist ) . "\n" );
+    $funcname = undef;
+}
+
+# Emit code for a function call
+sub do_function_call {
+    my ( $name, $argument, $lvar ) = @_;
+    die("function $name not previously declared\n")
+      if ( !exists( $Funcparam{$name} ) );
+    print( $OUT "\t\t\t# Call $name\n" );
+
+    # Get a caller id
+    my $id = getcallerid($name);
+
+    # If there is an argument, copy it into the function
+    if ( defined($argument) && ( $argument ne "" ) ) {
+        die("function $name has no argument\n")
+          if ( $Funcparam{$name} eq "" );
+        $argument = checkvar( $argument, 1 );
+        print( $OUT "\tLMA $argument" . "hi\n" );
+        print( $OUT "\tSMA $Funcparam{$name}" . "hi\n" );
+        print( $OUT "\tLMA $argument" . "lo\n" );
+        print( $OUT "\tSMA $Funcparam{$name}" . "lo\n" );
+    }
+
+    # Print out the call and the return label
+    print( $OUT "\tLCB $id\n" );
+    print( $OUT "\tJMP $name\n" );
+    print( $OUT "$name" . "ret$id:\n" );
+
+    # If we have an lvar, copy from the param back to the lvar
+    if ( defined($lvar) ) {
+        print( $OUT "\tLMA $Funcparam{$name}" . "hi\n" );
+        print( $OUT "\tSMA $lvar" . "hi\n" );
+        print( $OUT "\tLMA $Funcparam{$name}" . "lo\n" );
+        print( $OUT "\tSMA $lvar" . "lo\n" );
+    }
+}
+
+#### MAIN PROGRAM ####
 die("Usage: $0 file.cl\n") if ( @ARGV != 1 );
 my $outfile = $ARGV[0];
 $outfile =~ s{cl$}{s};
 die("output file name same as input file $outfile\n")
   if ( $outfile eq $ARGV[0] );
 
-  open( $OUT,   ">", $outfile ) || die("Cannot write $outfile: $!\n");
-  open( my $IN, "<", $ARGV[0] ) || die("Cannot open $ARGV[0]: $!\n");
-  while (<$IN>) {
+open( $OUT,   ">", $outfile ) || die("Cannot write $outfile: $!\n");
+open( my $IN, "<", $ARGV[0] ) || die("Cannot open $ARGV[0]: $!\n");
+print( $OUT "\tJMP main\n" );    # Initial function call
+while (<$IN>) {
     chomp;
 
     # Lose comments
@@ -129,31 +209,10 @@ die("output file name same as input file $outfile\n")
         next;
     }
 
-    # Constant assignment
-    if (m{(\S+)\s*=\s*(\S+)\s*;}) {
-        my ( $var, $val ) = ( $1, $2 );
-        checkvar( $var, 1 );
-        my ( $top, $bot ) = num2nibbles($val);
-        print( $OUT "\t\t\t# $var = $val\n");
-        if ($top) {
-          printf( $OUT "\tLCA 0x%x\n", 		        $top );
-          printf( $OUT "\tSMA %shi\n",                  $var );
-        } else {
-          printf( $OUT "\tZEROM %shi\n",                $var );
-        }
-        if ($bot) {
-          printf( $OUT "\tLCA 0x%x\n",                  $bot );
-          printf( $OUT "\tSMA %slo\n",                  $var );
-        } else {
-          printf( $OUT "\tZEROM %slo\n",                $var );
-	}
-        next;
-    }
-
     # Two operand operation
     if (m{(\S+)\s*=\s*(\S+)\s*(\+|\-)\s*(\S+)\s*;}) {
         my ( $lvar, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
-        checkvar( $lvar, 1 );
+        $lvar = checkvar( $lvar, 1 );
 
         # Second argument is a constant.
         if ( $var2 =~ m{^\d+$} ) {
@@ -168,19 +227,21 @@ die("output file name same as input file $outfile\n")
                 $var2 = -$var2;
                 $op   = "+";
             }
+            $var1 = checkvar( $var1, 1 );
             emit_oneconst_operation( $lvar, $var2, $op, $var1 );
             next;
         }
 
         # First argument is a constant
         if ( $var1 =~ m{^\d+$} ) {
+            $var2 = checkvar( $var2, 1 );
             emit_oneconst_operation( $lvar, $var1, $op, $var2 );
             next;
         }
 
         # Neither arguments are constants
-        checkvar( $var1, 1 );
-        checkvar( $var2, 1 );
+        $var1 = checkvar( $var1, 1 );
+        $var2 = checkvar( $var2, 1 );
         my $aluinstruction = $ALUop{$op};
         printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
         printf( $OUT "\tLMA %slo\t\t# $lvar = $var1 $op $var2\n", $var1 );
@@ -196,8 +257,8 @@ die("output file name same as input file $outfile\n")
     if (m{(if|while)\s*\(\s*(\S+)\s+(\S+)\s+(\S+)\s*\)\s*\{}) {
         my ( $keyword, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
 
-        checkvar( $var1, 1 );
-        checkvar( $var2, 1 );
+        $var1 = checkvar( $var1, 1 );
+        $var2 = checkvar( $var2, 1 );
 
         # Get a start label, an end label and an ok label
         my $startlabel = newlabel();
@@ -205,20 +266,24 @@ die("output file name same as input file $outfile\n")
         my $oklabel    = newlabel();
         if ( $keyword eq "while" ) {
             push( @Loopstack,
-                [ "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
+                [ "LOOP", "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
         } else {
-            push( @Loopstack, [ "$endlabel:\n", undef ] );
+            push( @Loopstack, [ "IF", "$endlabel:\n", undef ] );
         }
 
         if ( $op eq "==" ) {
             emit_eqcomparison(
-                $startlabel, $var1, $var2, "JNE $endlabel",
-                "JNE $endlabel", $oklabel, $op);
+                $startlabel, $var1, $var2,
+                "JNE $endlabel",
+                "JNE $endlabel",
+                $oklabel, $op
+            );
         }
 
         if ( $op eq "!=" ) {
             emit_eqcomparison( $startlabel, $var1, $var2, "JNE $oklabel",
-                "JEQ $endlabel", $oklabel, $op );
+                "JEQ $endlabel",
+                $oklabel, $op );
         }
 
         if ( $op eq "<" ) {
@@ -248,8 +313,9 @@ die("output file name same as input file $outfile\n")
         my $endlabel = newlabel();
         my $aryref   = pop(@Loopstack);
         die("Unbalanced else\n") if ( !defined($aryref) );
-        my ( $line, $orignendlabel ) = @{$aryref};
-        push( @Loopstack, [ "$endlabel:\n", undef ] );
+        my ( $type, $line, $orignendlabel ) = @{$aryref};
+        die("else not after if\n") if ( $type ne "IF" );
+        push( @Loopstack, [ "IF", "$endlabel:\n", undef ] );
         print( $OUT "\tJMP $endlabel\t\t# Just before else\n" );
         print( $OUT $line );
         next;
@@ -261,31 +327,40 @@ die("output file name same as input file $outfile\n")
         # Get a start label, an end label and an ok label
         my $startlabel = newlabel();
         my $endlabel   = newlabel();
-        push( @Loopstack, [ "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
+        push( @Loopstack,
+            [ "LOOP", "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
         printf( $OUT "$startlabel:\t\t\t# while (1)\n" );
         next;
     }
 
-    # End of an if or loop
+    # End of an if, loop or function
     if (m{\}}) {
         my $aryref = pop(@Loopstack);
-        die("Unbalanced else\n") if ( !defined($aryref) );
-        my ( $line, $orignendlabel ) = @{$aryref};
-        die("Unbalanced }\n") if ( !defined($line) );
+        die("Unbalanced }\n") if ( !defined($aryref) );
+        my ( $type, $line, $orignendlabel ) = @{$aryref};
+        die("Unbalanced }\n") if ( !defined($type) );
+
+        if ( $type eq "FUNC" ) {
+            end_function();
+            next;
+        }
+
+        # Otherwise an if or loop end
         print( $OUT $line );
         next;
     }
 
     # putchar
     if (m{putchar\((.+)\);}) {
-        my $arg = $1;
-        if ( checkvar( $arg, 0 ) ) {
+        my $origarg = $1;
+        my $arg = checkvar( $origarg, 0 );
+        if ( defined($arg) ) {
             printf( $OUT "\tLCA %shi\t\t# putchar $arg\n", $arg );
-            printf( $OUT "\tLCB %slo\n", $arg );
+            printf( $OUT "\tLCB %slo\n",                   $arg );
             printf( $OUT "\tDAB\n" );
         } else {
-            $arg = 10      if ( $arg eq "'\\n'" );
-            $arg = ord($1) if ( $arg =~ m{'(.)'} );
+            $arg = 10      if ( $origarg eq "'\\n'" );
+            $arg = ord($1) if ( $origarg =~ m{'(.)'} );
             my ( $top, $bot ) = num2nibbles($arg);
             print( $OUT "\tLCA $top\t\t# putchar $arg\n" );
             print( $OUT "\tLCB $bot\n" );
@@ -297,10 +372,10 @@ die("output file name same as input file $outfile\n")
     # Postincrement
     if (m{(\S+)\+\+;}) {
         my $var1 = $1;
-        checkvar( $var1, 1 );
+        $var1 = checkvar( $var1, 1 );
         printf( $OUT "\tLMA %slo\t\t# $var1 ++\n", $var1 );
         printf( $OUT "\tSMIA %slo\n",              $var1 );
-        printf( $OUT "\tNOP | xxxC LMA %shi\n",	   $var1 );
+        printf( $OUT "\tNOP | xxxC LMA %shi\n",    $var1 );
         printf( $OUT "\tNOP | xxxC SMIA %shi\n",   $var1 );
         next;
     }
@@ -308,12 +383,12 @@ die("output file name same as input file $outfile\n")
     # Arithmetic shift right by four
     if (m{(\S+)\s*=\s*(\S+)\s*>>\s*4;}) {
         my ( $lvar, $var1 ) = ( $1, $2 );
-        checkvar( $lvar, 1 );
-        checkvar( $var1, 1 );
+        $lvar = checkvar( $lvar, 1 );
+        $var1 = checkvar( $var1, 1 );
         printf( $OUT "\tLMA %shi\t\t# $lvar = $var1 >> 4\n", $var1 );
         printf( $OUT "\tSMA %slo\n",                         $lvar );
-        printf( $OUT "\tLCA 0 | Nxxx LCA 0xf\n");
-        printf( $OUT "\tSMA %shi\n",   $lvar );
+        printf( $OUT "\tLCA 0 | Nxxx LCA 0xf\n" );
+        printf( $OUT "\tSMA %shi\n", $lvar );
         next;
     }
 
@@ -343,8 +418,98 @@ die("output file name same as input file $outfile\n")
         next;
     }
 
+    # Function declaration: function name (param) {
+    if (m{function\s+(\S+)\s*\((\S*)\)\s*\{}) {
+        my $name  = $1;
+        my $param = $2;
+        die("Can't declare function $name inside $funcname\n")
+          if ( defined($funcname) );
+        die("function $name previously declared\n")
+          if ( exists( $Funcparam{$name} ) );
+        $funcname = $name;
+        $Funccaller{$name} = -1;    # No callers yet
+        print( $OUT "\n$name:\n" );
+        printf( $OUT "%scaller:\tEQU %d\n", $name, $varlocn++ );
+        if ( defined($param) && ( $param ne "" ) ) {
+          addvar($param);
+          $param = checkvar( $param, 1 );
+          $Funcparam{$name} = $param;
+	}
+        printf( $OUT "\tSMB %scaller\n", $name );
+        push( @Loopstack, ["FUNC"] );
+        next;
+    }
+
+    # Return with return value. Use the param as return location
+    if (m{return\((\S+)\);}) {
+        my $retvar = $1;
+        $retvar = checkvar( $retvar, 1 );
+        printf( $OUT "\tLMA %shi\t\t# Return $retvar\n", $retvar );
+        printf( $OUT "\tSMA %shi\n",  $Funcparam{$funcname} );
+        printf( $OUT "\tLMA %slo\n",  $retvar );
+        printf( $OUT "\tSMA %slo\n",  $Funcparam{$funcname} );
+        printf( $OUT "\tJMP %sret\n", $funcname );
+        next;
+    }
+
+    # Function call with optional argument and assignment
+    if (m{(\S+)=\s*(\S+)\s*\((\S*)\)\s*;}) {
+        my $name     = $2;
+        my $argument = $3;
+        my $lvar     = $1;
+        $lvar = checkvar( $lvar, 1 );
+        do_function_call( $name, $argument, $lvar );
+        next;
+    }
+
+    # Function call with optional argument and no assignment
+    if (m{(\S+)\s*\((\S*)\)\s*;}) {
+        my $name     = $1;
+        my $argument = $2;
+        do_function_call( $name, $argument );
+        next;
+    }
+
+    # Constant assignment
+    if (m{(\S+)\s*=\s*(\S+)\s*;}) {
+        my ( $var, $val ) = ( $1, $2 );
+        $var = checkvar( $var, 1 );
+        my ( $top, $bot ) = num2nibbles($val);
+        print( $OUT "\t\t\t# $var = $val\n" );
+        if ($top) {
+            printf( $OUT "\tLCA 0x%x\n", $top );
+            printf( $OUT "\tSMA %shi\n", $var );
+        } else {
+            printf( $OUT "\tZEROM %shi\n", $var );
+        }
+        if ($bot) {
+            printf( $OUT "\tLCA 0x%x\n", $bot );
+            printf( $OUT "\tSMA %slo\n", $var );
+        } else {
+            printf( $OUT "\tZEROM %slo\n", $var );
+        }
+        next;
+    }
+
+    # Return and no return value
+    if (m{return;}) {
+        printf( $OUT "\tJMP %sret\n", $funcname );
+        next;
+    }
+
     die("Unrecognised line: $_\n");
 }
+
+# Print out dummy labels for the unused function caller ids
+print( $OUT "\n# Dummy labels for unused function caller ids\n" );
+foreach my $n ( keys(%Funccaller) ) {
+    my $start = $Funccaller{$n} + 1;
+    foreach my $i ( $start .. 15 ) {
+        print( $OUT "$n" . "ret$i:\n" );
+    }
+}
+
+die("No main function defined\n") if ( !exists( $Funccaller{"main"} ) );
 close($IN);
 close($OUT);
 exit(0);
