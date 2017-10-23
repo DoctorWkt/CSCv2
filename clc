@@ -358,8 +358,8 @@ while (<$IN>) {
         my $origarg = $1;
         my $arg = checkvar( $origarg, 0 );
         if ( defined($arg) ) {
-            printf( $OUT "\tLCA %shi\t\t# putchar $arg\n", $arg );
-            printf( $OUT "\tLCB %slo\n",                   $arg );
+            printf( $OUT "\tLMA %shi\t\t# putchar $arg\n", $arg );
+            printf( $OUT "\tLMB %slo\n",                   $arg );
             printf( $OUT "\tDAB\n" );
         } else {
             $arg = 10      if ( $origarg eq "'\\n'" );
@@ -403,9 +403,9 @@ while (<$IN>) {
         my $found = 0;
         while ( $i >= 0 ) {
             my $aryref = $Loopstack[ $i-- ];
-            die("No matching loop end for break, 1\n") if ( !defined($aryref) );
-            my ( $line, $orignendlabel ) = @{$aryref};
-            if ( defined($orignendlabel) ) {
+            die("No matching loop end for break\n") if ( !defined($aryref) );
+            my ( $type, $line, $orignendlabel ) = @{$aryref};
+            if ( $type eq "LOOP" ) {
                 printf( $OUT "\tJMP %s\t\t# break\n", $orignendlabel );
                 $found = 1;
                 last;
