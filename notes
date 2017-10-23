@@ -195,3 +195,8 @@ OK, I have functions, function returns, local variables, one function
 parameter and assignment from function returns working. The compiler
 is getting as ugly as sin. But it does work! I could take my h2 compiler
 and modify it if I want to make it a proper compiler.
+
+Tue 24 Oct 09:34:43 AEST 2017
+-----------------------------
+I found a few more compiler bugs and fixed them. One had me stumped for
+quite a while. Nothing beats pen and paper for debugging :)
