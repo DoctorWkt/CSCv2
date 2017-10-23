@@ -48,18 +48,18 @@ The language only supports one operator on the right-hand side of an
 assignment operation. Here is the available syntax:
 
 <blockquote>
-<i>name</i> <i>name2</i><br>
-<i>name</i> <i>constant</i><br>
-<i>name</i> <i>name2</i> <i>op</i> <i>constant</i><br>
-<i>name</i> <i>constant</i> <i>op</i> <i>name2</i><br>
-<i>name</i> <i>name2</i> <i>op</i> <i>name3</i>
+<i>name</i>= <i>name2</i>;<br>
+<i>name</i>= <i>constant</i>;<br>
+<i>name</i>= <i>name2</i> <i>op</i> <i>constant</i>;<br>
+<i>name</i>= <i>constant</i> <i>op</i> <i>name2</i>;<br>
+<i>name</i>= <i>name2</i> <i>op</i> <i>name3</i>;
 </blockquote>
 
 where the names are variables names and the constants are decimal constants;
 The available operators are ```+```, ```-```, ```&```, ```|``` and ```^```
 and are the same as the C operators. There are no multiply or divide operators.
 
-## Right Shift Four Operation
+## Arithmetic 4-bit Right Shift Operation
 
 Because I needed a 4-bit right shift and this is easy to do on a 4-bit CPU,
 there is this syntax:
