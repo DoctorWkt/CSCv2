@@ -48,11 +48,11 @@ The language only supports one operator on the right-hand side of an
 assignment operation. Here is the available syntax:
 
 <blockquote>
-*name*= *name2*;<br>
-*name*= *constant*;<br>
-*name*= *name2* *op* *constant*;<br>
-*name*= *constant* *op* *name2*;<br>
-*name*= *name2* *op* *name3*;
+<i>name</i> <i>name2</i>br>
+<i>name</i> <i>constant</i>br>
+<i>name</i> <i>name2</i> <i>op</i> <i>constant</i>br>
+<i>name</i> <i>constant</i> <i>op</i> <i>name2</i>br>
+<i>name</i> <i>name2</i> <i>op</i> <i>name3</i>
 </blockquote>
 
 where the names are variables names and the constants are decimal constants;
@@ -132,8 +132,8 @@ The *putchar()* syntax allows you to print out certain things:
 
 
 <blockquote>
-putchar(*name*);<br>
-putchar('*x*');<br>
+putchar(<i>name</i>);<br>
+putchar('<i>x</i>');<br>
 putchar('\n');
 </blockquote>
 
@@ -148,3 +148,52 @@ character with the *name*'s value is printed out. So:
 ```
 
 will print out an uppercase 'A'.
+
+## Function Declaration
+
+A function is declared with the syntax:
+
+> function *name*(*param*) {
+
+where the name is compulsory, but the parameter is optional.
+
+A function is ended with a closed curly bracket on a line by itself:
+
+> }
+
+There is no recursion in the language: you can only call a function once
+at a time. There must be a function called *main* in your program, as the
+compiler insert a jump to *main* as the first instruction in the assembly
+output. Due to the CPU's architecture, there can no more than sixteen
+different calls to one function.
+
+The parameter named in the function declaration is visible as a variable
+with that name in the function.
+
+## Returning from a Function
+
+Returning from a function is done with one of these two lines:
+
+<blockquote>
+return;<br>
+return(<i>name</i>);
+</blockquote>
+
+where *name* is a variable defined in the function.
+
+## Calling a Function
+
+A function call can be done with an optional argument which is copied into
+the function parameter, and optionally with an assignment statement to save
+the return value:
+
+<blockquote>
+<i>function</i>();<br>
+<i>function</i>(<i>arg</i>);<br>
+<i>name</i>= <i>function</i>();<br>
+<i>name</i>= <i>function</i>(<i>arg</i>);
+</blockquote>
+
+and *arg* has to be a variable not a constant.
+</blockquote>
+
