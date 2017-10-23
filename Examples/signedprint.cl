@@ -8,12 +8,14 @@ function printdec(x) {
   var tencount;
   var asciizero;
   var ten;
+  var hundredormore;
 
   onehundred=100;
   zero=0;
   tencount= 48;		// ASCII '0'
   asciizero= 48;	// ASCII '0'
   ten= 10;
+  hundredormore= 0;	// Will be !0 if x >= 100
 
 
   // Print out sign
@@ -26,6 +28,7 @@ function printdec(x) {
   if (x >= onehundred) {
     putchar('1');
     x= x - onehundred;
+    hundredormore= 10;	// "Boolean" flag :)
   }
 
   // Count number of ten digits
@@ -33,8 +36,18 @@ function printdec(x) {
     tencount++;
     x= x - ten;
   }
-  if (tencount > asciizero) {
-    putchar(tencount);
+
+  // What we want: print out the tencount
+  // if it is bigger than '0' or if x was
+  // originally 100 or more. But we don't
+  // have an OR operator. So, use nested if
+  // statements and print in the right places!
+  if (hundredormore == ten) {
+      putchar(tencount);
+  } else {
+    if (tencount > asciizero) {
+      putchar(tencount);
+    }
   }
 
   // Convert remaining count to ASCII

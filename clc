@@ -300,7 +300,7 @@ while (<$IN>) {
         }
 
         if ( $op eq ">" ) {
-            emit_ltcomparison( $startlabel, $var2, $var1, "JLE $endlabel",
+            emit_ltcomparison( $startlabel, $var2, $var1, "JGE $endlabel",
                 $op );
         }
 
