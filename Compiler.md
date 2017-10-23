@@ -48,10 +48,10 @@ The language only supports one operator on the right-hand side of an
 assignment operation. Here is the available syntax:
 
 <blockquote>
-<i>name</i> <i>name2</i>br>
-<i>name</i> <i>constant</i>br>
-<i>name</i> <i>name2</i> <i>op</i> <i>constant</i>br>
-<i>name</i> <i>constant</i> <i>op</i> <i>name2</i>br>
+<i>name</i> <i>name2</i><br>
+<i>name</i> <i>constant</i><br>
+<i>name</i> <i>name2</i> <i>op</i> <i>constant</i><br>
+<i>name</i> <i>constant</i> <i>op</i> <i>name2</i><br>
 <i>name</i> <i>name2</i> <i>op</i> <i>name3</i>
 </blockquote>
 
@@ -181,11 +181,22 @@ return(<i>name</i>);
 
 where *name* is a variable defined in the function.
 
+## An Example Function
+
+Here is a full example function:
+
+```
+function increment(x) {
+  x= x + 1;
+  return(x);
+}
+```
+
 ## Calling a Function
 
 A function call can be done with an optional argument which is copied into
 the function parameter, and optionally with an assignment statement to save
-the return value:
+the return value. Thus, there are four possible syntax variants:
 
 <blockquote>
 <i>function</i>();<br>
@@ -197,3 +208,8 @@ the return value:
 and *arg* has to be a variable not a constant.
 </blockquote>
 
+## No Optimisations
+
+Finally, the compiler is very stupid one-pass compiler. It doesn't do any
+optimisations, so there will be some space inefficiency in the code that
+it produces.
