@@ -213,7 +213,7 @@ while (<$IN>) {
     }
 
     # Two operand operation
-    if (m{(\S+)\s*=\s*(\S+)\s*(\+|\-)\s*(\S+)\s*;}) {
+    if (m{(\S+)\s*=\s*(\S+)\s*(\+|\-|\&|\||\^)\s*(\S+)\s*;}) {
         my ( $lvar, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
         $lvar = checkvar( $lvar, 1 );
 
@@ -300,7 +300,7 @@ while (<$IN>) {
         }
 
         if ( $op eq ">" ) {
-            emit_ltcomparison( $startlabel, $var2, $var1, "JGE $endlabel",
+            emit_ltcomparison( $startlabel, $var2, $var1, "JLE $endlabel",
                 $op );
         }
 
