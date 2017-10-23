@@ -477,6 +477,18 @@ while (<$IN>) {
     if (m{(\S+)\s*=\s*(\S+)\s*;}) {
         my ( $var, $val ) = ( $1, $2 );
         $var = checkvar( $var, 1 );
+
+	# See if the val is also a variable
+	my $rhsvar= checkvar( $val, 0);
+        if (defined($rhsvar)) {
+          printf( $OUT "\tLMA %shi\n", $rhsvar );
+          printf( $OUT "\tSMA %shi\n", $var );
+          printf( $OUT "\tLMA %slo\n", $rhsvar );
+          printf( $OUT "\tSMA %slo\n", $var );
+	  next;
+	}
+
+	# No, it must be a decimal constant
         my ( $top, $bot ) = num2nibbles($val);
         print( $OUT "\t\t\t# $var = $val\n" );
         if ($top) {
