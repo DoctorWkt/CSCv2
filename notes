@@ -200,3 +200,9 @@ Tue 24 Oct 09:34:43 AEST 2017
 -----------------------------
 I found a few more compiler bugs and fixed them. One had me stumped for
 quite a while. Nothing beats pen and paper for debugging :)
+
+A few days ago I had a hard time debugging when the ALU was outputting the
+wrong result/flags. I'd fixed gen_alu but the problem still persisted. I'd
+forgotten to fix the same bug in csim. To ensure that this never happens
+again, I've modified csim to load the ALU ROM image and use that to do the
+ALU operations. So now csim should behave exactly the same as the hardware.
