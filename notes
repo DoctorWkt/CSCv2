@@ -206,3 +206,14 @@ wrong result/flags. I'd fixed gen_alu but the problem still persisted. I'd
 forgotten to fix the same bug in csim. To ensure that this never happens
 again, I've modified csim to load the ALU ROM image and use that to do the
 ALU operations. So now csim should behave exactly the same as the hardware.
+
+Thu 26 Oct 08:10:59 AEST 2017
+-----------------------------
+I got rid of some DRY code in the compiler yesterday. I did start work
+on a proper compiler, using a derivative of my h2 compiler as the basis.
+However, I can see that it's going to be too much work, so I stopped.
+
+This morning, I saw Chris Baird's twitter video showing his wire wrap
+CPU mostly working, maybe just a couple of broken wires on some of the
+LED displays. That's excellent. In browsing the csim source, I realised
+that I wasn't displaying the correct ALU operaion in debug mode, now fixed.
