@@ -355,6 +355,7 @@ foreach my $i (0 .. (@Line - 1)) {
         next if ( !defined($inst1) );
     }
     $PC++;
+    die("Out of instruction space!\n") if ($PC > 0x100);
 }
 
 #print Dumper(\%Label);
