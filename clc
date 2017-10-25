@@ -273,18 +273,14 @@ while (<$IN>) {
         }
 
         if ( $op eq "==" ) {
-            emit_eqcomparison(
-                $startlabel, $var1, $var2,
-                "JNE $endlabel",
-                "JNE $endlabel",
-                $oklabel, $op
+            emit_eqcomparison( $startlabel, $var1, $var2, "JNE $endlabel",
+                "JNE $endlabel", $oklabel, $op
             );
         }
 
         if ( $op eq "!=" ) {
             emit_eqcomparison( $startlabel, $var1, $var2, "JNE $oklabel",
-                "JEQ $endlabel",
-                $oklabel, $op );
+                "JEQ $endlabel", $oklabel, $op );
         }
 
         if ( $op eq "<" ) {
@@ -360,8 +356,11 @@ while (<$IN>) {
             printf( $OUT "\tLMB %slo\n",                   $arg );
             printf( $OUT "\tDAB\n" );
         } else {
+	    $arg= undef;
             $arg = 10      if ( $origarg eq "'\\n'" );
             $arg = ord($1) if ( $origarg =~ m{'(.)'} );
+	    die("Unrecognised putchar argument $origarg\n")
+			   if (!defined($arg));
             my ( $top, $bot ) = num2nibbles($arg);
             print( $OUT "\tLCA $top\t\t# putchar $arg\n" );
             print( $OUT "\tLCB $bot\n" );
