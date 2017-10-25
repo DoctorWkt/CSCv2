@@ -476,32 +476,31 @@ while (<$IN>) {
         my ( $var, $val ) = ( $1, $2 );
         $var = checkvar( $var, 1 );
 
-	# See if the val is also a variable
-	my $rhsvar= checkvar( $val, 0);
-        if (defined($rhsvar)) {
+	# If the value is a constant
+        print( $OUT "\t\t\t# $var = $val\n" );
+        if ($val=~ m{^-?\d+$}) {
+          my ( $top, $bot ) = num2nibbles($val);
+          if ($top) {
+            printf( $OUT "\tLCA 0x%x\n", $top );
+            printf( $OUT "\tSMA %shi\n", $var );
+          } else {
+            printf( $OUT "\tZEROM %shi\n", $var );
+          }
+          if ($bot) {
+            printf( $OUT "\tLCA 0x%x\n", $bot );
+            printf( $OUT "\tSMA %slo\n", $var );
+          } else {
+            printf( $OUT "\tZEROM %slo\n", $var );
+          }
+        } else {
+	  # See if the val is a variable
+	  my $rhsvar= checkvar( $val, 1);
           printf( $OUT "\tLMA %shi\n", $rhsvar );
           printf( $OUT "\tSMA %shi\n", $var );
           printf( $OUT "\tLMA %slo\n", $rhsvar );
           printf( $OUT "\tSMA %slo\n", $var );
-	  next;
 	}
-
-	# No, it must be a decimal constant
-        my ( $top, $bot ) = num2nibbles($val);
-        print( $OUT "\t\t\t# $var = $val\n" );
-        if ($top) {
-            printf( $OUT "\tLCA 0x%x\n", $top );
-            printf( $OUT "\tSMA %shi\n", $var );
-        } else {
-            printf( $OUT "\tZEROM %shi\n", $var );
-        }
-        if ($bot) {
-            printf( $OUT "\tLCA 0x%x\n", $bot );
-            printf( $OUT "\tSMA %slo\n", $var );
-        } else {
-            printf( $OUT "\tZEROM %slo\n", $var );
-        }
-        next;
+	next;
     }
 
     # Return and no return value
