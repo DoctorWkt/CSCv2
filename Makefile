@@ -12,7 +12,7 @@ alu.rom: gen_alu
 toprom.rom: Examples/fibminsky.s
 	./cas Examples/fibminsky.s
 
-minsky: Examples/minsky.s cas
+minsky: Examples/minsky.s cas alu.rom
 	./cas Examples/minsky.s
 	cp toprom.rom minsky
 

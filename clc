@@ -123,18 +123,53 @@ sub emit_ltcomparison {
     printf( $OUT "\t$jump\n" );
 }
 
-# Emit an operation with the first argument a constant
-sub emit_oneconst_operation {
+# Emit an operation with two operands
+sub emit_twoop_operation {
     my ( $lvar, $var1, $op, $var2 ) = @_;
-    my ( $top, $bot ) = num2nibbles($var1);
+    my ($leftisconst, $rightisconst)= (0,0);
+    my ($lefttop, $leftbot, $righttop, $rightbot);
+    $lvar = checkvar( $lvar, 1 );
+
+    # Convert operands either to nibbles or
+    # identify the variables involved
+    if ($var1=~ m{^-?\d+$}) {
+      ($lefttop, $leftbot ) = num2nibbles($var1);
+      $leftisconst=1;
+    } else {
+      $var1 = checkvar( $var1, 1 );
+    }
+    if ($var2=~ m{^-?\d+$}) {
+      ($righttop, $rightbot ) = num2nibbles($var2);
+      $rightisconst=1;
+    } else {
+      $var2 = checkvar( $var2, 1 );
+    }
+
     my $aluinstruction = $ALUop{$op};
+    print($OUT "\t\t\t# $lvar = $var1 $op $var2\n");
     printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
-    printf( $OUT "\tLCA 0x%x\t\t# $lvar = $var1 $op $var2\n", $bot );
-    printf( $OUT "\tLMB %slo\n",                              $var2 );
-    printf( $OUT "\t$aluinstruction %slo\n",                  $lvar );
-    printf( $OUT "\tLCA 0x%x\n",                              $top );
-    printf( $OUT "\tLMB %shi\n",                              $var2 );
-    printf( $OUT "\t$aluinstruction %shi\n",                  $lvar );
+    if ($leftisconst) {
+      printf( $OUT "\tLCA 0x%x\n", $leftbot);
+    } else {
+      printf( $OUT "\tLMA %slo\n", $var1 );
+    }
+    if ($rightisconst) {
+      printf( $OUT "\tLCB 0x%x\n", $rightbot);
+    } else {
+      printf( $OUT "\tLMB %slo\n", $var2 );
+    }
+    printf( $OUT "\t$aluinstruction %slo\n", $lvar );
+    if ($leftisconst) {
+      printf( $OUT "\tLCA 0x%x\n", $lefttop);
+    } else {
+      printf( $OUT "\tLMA %shi\n", $var1 );
+    }
+    if ($rightisconst) {
+      printf( $OUT "\tLCB 0x%x\n", $righttop);
+    } else {
+      printf( $OUT "\tLMB %shi\n", $var2 );
+    }
+    printf( $OUT "\t$aluinstruction %shi\n", $lvar );
 }
 
 # Deal with the end of a function
@@ -215,44 +250,7 @@ while (<$IN>) {
     # Two operand operation
     if (m{(\S+)\s*=\s*(\S+)\s*(\+|\-|\&|\||\^)\s*(\S+)\s*;}) {
         my ( $lvar, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
-        $lvar = checkvar( $lvar, 1 );
-
-        # Second argument is a constant.
-        if ( $var2 =~ m{^\d+$} ) {
-
-            # First is also a constant, we can't do this yet
-            die("Can't $op on two constants\n") if ( $var1 =~ m{^\d+$} );
-
-            # Convert this from var OP constant to constant OP var.
-            # If OP is subtraction, negate the constant and make it
-            # addition
-            if ( $op eq "-" ) {
-                $var2 = -$var2;
-                $op   = "+";
-            }
-            $var1 = checkvar( $var1, 1 );
-            emit_oneconst_operation( $lvar, $var2, $op, $var1 );
-            next;
-        }
-
-        # First argument is a constant
-        if ( $var1 =~ m{^\d+$} ) {
-            $var2 = checkvar( $var2, 1 );
-            emit_oneconst_operation( $lvar, $var1, $op, $var2 );
-            next;
-        }
-
-        # Neither arguments are constants
-        $var1 = checkvar( $var1, 1 );
-        $var2 = checkvar( $var2, 1 );
-        my $aluinstruction = $ALUop{$op};
-        printf( $OUT "\tCLC\n" ) if ( ( $op eq "+" ) || ( $op eq "-" ) );
-        printf( $OUT "\tLMA %slo\t\t# $lvar = $var1 $op $var2\n", $var1 );
-        printf( $OUT "\tLMB %slo\n",                              $var2 );
-        printf( $OUT "\t$aluinstruction %slo\n",                  $lvar );
-        printf( $OUT "\tLMA %shi\n",                              $var1 );
-        printf( $OUT "\tLMB %shi\n",                              $var2 );
-        printf( $OUT "\t$aluinstruction %shi\n",                  $lvar );
+        emit_twoop_operation( $lvar, $var1, $op, $var2 );
         next;
     }
 
