@@ -107,6 +107,8 @@ while (1) {
 
     # Perform an ALU instruction
     if ( $RAMwrite == 0 ) {    # Active low
+	# Prepend Asel so we print the right opname
+	$ALUop |= ($Asel) ? 0x8 : 0x0;
         printf( ", %s: A %x B %x Cin %d", $ALUopname[$ALUop], $A, $B, $Cin )
           if ($debug);
 
