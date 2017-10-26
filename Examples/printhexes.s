@@ -9,21 +9,20 @@ xlo:	EQU  1
 loop:
 
 # Top digit
-        LCA  7
-        LMB  xhi
-        ADDMB                           # B=B+7, flags set
-        LMB  xhi | xzxC NOP		# Reload the digit if 0-9
-        LCA  3   | xzxC LCA  4
-        DAB  7
-
+	LMB xhi
+	TBF
+	LCA 3 | NzVc LCA 4 | NzVC LCA 4 | NZvc LCA 4 | NZvC LCA 4 \
+					| NZVc LCA 4 | NZVC LCA 4 
+	NOP   | NzVc LCB 1 | NzVC LCB 2 | NZvc LCB 3 | NZvC LCB 4 \
+				        | NZVc LCB 5 | NZVC LCB 6
+	DMAB xlo
 # Bottom digit
-	CLC
-        LMB xlo
-        ADDMB                           # B=B+7, flags set
-        LMB  xlo | xzxC NOP  		# Reload the digit if 0-9
-        LCA  3   | xzxC LCA  4
-        DAB  0
-
+	TBF
+	LCA 3 | NzVc LCA 4 | NzVC LCA 4 | NZvc LCA 4 | NZvC LCA 4 \
+					| NZVc LCA 4 | NZVC LCA 4 
+	NOP   | NzVc LCB 1 | NzVC LCB 2 | NZvc LCB 3 | NZvC LCB 4 \
+				        | NZVc LCB 5 | NZVC LCB 6
+	DAB 0
 # Newline
         LCB 0xA
         DAB
