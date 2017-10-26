@@ -217,3 +217,8 @@ This morning, I saw Chris Baird's twitter video showing his wire wrap
 CPU mostly working, maybe just a couple of broken wires on some of the
 LED displays. That's excellent. In browsing the csim source, I realised
 that I wasn't displaying the correct ALU operaion in debug mode, now fixed.
+
+Chris thinks he's also having LED current draw issues. Wish there was a
+component that was a LED array, LED drivers and limit resistors all in one
+unit. I found a way to print two hex digits in 9 instructions, so I've
+added prhex() and prhexn() to the compiler to do this.
