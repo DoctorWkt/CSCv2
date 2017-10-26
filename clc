@@ -49,7 +49,7 @@ sub getcallerid {
     return ( $Funccaller{$name} );
 }
 
-# Get a new label
+# Get a new jump label
 my $nextlabel = 0;
 
 sub newlabel {
@@ -180,7 +180,7 @@ sub do_function_call {
       if ( !exists( $Funccaller{$name} ) );
     print( $OUT "\t\t\t# Call $name\n" );
 
-    # Get a caller id
+    # Get a new caller id
     my $id = getcallerid($name);
 
     # If there is an argument, copy it into the function
@@ -245,7 +245,7 @@ while (<$IN>) {
     if (m{(if|while)\s*\(\s*(\S+)\s+(\S+)\s+(\S+)\s*\)\s*\{}) {
         my ( $keyword, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
 
-        # Get a start label, an end label and an ok label
+        # Get a start label and an end label
         my $startlabel = newlabel();
         my $endlabel   = newlabel();
         if ( $keyword eq "while" ) {
@@ -294,7 +294,7 @@ while (<$IN>) {
     # while (1) statement
     if (m{while\s*\(\s*1\s*\)\s*\{}) {
 
-        # Get a start label, an end label and an ok label
+        # Get a start label and an end label
         my $startlabel = newlabel();
         my $endlabel   = newlabel();
         push( @Loopstack,
