@@ -227,3 +227,39 @@ Thursday 26 October  16:24:12 AEST 2017
 ---------------------------------------
 Just heard from Chris Baird on twitter: he's fixed up some wiring issues
 and his wire wrap CSCv2 is now working perfectly. Congrats to him.
+
+Thursday 26 October  16:29:56 AEST 2017
+---------------------------------------
+
+Possible 8-bit version of CSC
+=============================
+This is all hypothetical, but in case someone wants to do it. It should
+be possible to build an 8-bit version of the CSC. You'd need:
+
+- 16-bit PC:  Four 74LS161s cascaded together, or two 74LS469s.
+- bottom ROM: Two 64Kx8 EEPROMs instead of one 8Kx8 EEPROM.
+- top ROM:    One 64Kx8 EEPROM, as the control lines are the same.
+	      However, the four NZVC lines will limit PC addressing to
+	      12 bits, so you might want to choose 1Mx8 ROMs instead.
+- RAM:	      64Kx8 RAM.
+- mux:	      Two 74LS157s.
+- registers:  You will need two 8-bit registers for A & B, and one 4-bit
+	      register for the flags. So some combination of 74LS161s
+	      and/or CD4508Bs.
+- ALU:	      Two 8Kx8 EEPROMs, with the carry out of the low side
+	      connected to Cin on the high side. Use the NZVC from
+	      the high side only. Or, if you get adventurous, send some
+	      spare bits from each half to the other to do 1-, 2- and
+	      perhaps 3-bit or 4-bit shifts.
+- clock:      Unchanged.
+
+In total:     4+2+1+1+2+3+2+1=16 chips, two more for the UART=18 chips
+
+You'd be able to use a single register (A or B) to connect to the UART
+for 8-bit output. I still can't think of a simple way to do UART input.
+
+Possible idea: connect the UART to the ALU->RAM lines. Output becomes
+PASSA + Aload + Bload + RAMwrite, and the UART reads from the bus.
+For input, it can place data on the bus which can be loaded with an
+Aload or Bload. What we'd need is a way to disable the ALU, so we would
+have to split the RAMwrite signal into two separate signals.
