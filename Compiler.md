@@ -12,7 +12,7 @@ by the *cas* assembler. An example usage is
 and ```Examples/minsky.cl``` is an example program written in the high-level
 language.
 
-This document covers the *clc* compiler as it existed on October 23, 2017.
+This document covers the *clc* compiler as it existed on October 26, 2017.
 
 ## Input Structure
 
