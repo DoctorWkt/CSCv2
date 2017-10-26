@@ -93,42 +93,19 @@ sub num2nibbles {
     return ( $top, $bot );
 }
 
-# Emit an equality comparison
-sub emit_eqcomparison {
-    my ( $startlabel, $var1, $var2, $jump1, $jump2, $oklabel, $op ) = @_;
-
-    printf( $OUT "$startlabel:\tCLC\t\t# $var1 $op $var2\n" );
-    printf( $OUT "\tLMA %slo\n", $var1 );
-    printf( $OUT "\tLMB %slo\n", $var2 );
-    printf( $OUT "\tSUBM\n" );
-    printf( $OUT "\t$jump1\n" );
-    printf( $OUT "\tLMA %shi\n", $var1 );
-    printf( $OUT "\tLMB %shi\n", $var2 );
-    printf( $OUT "\tSUBM\n" );
-    printf( $OUT "\t$jump2\n" );
-    printf( $OUT "$oklabel:\n" );
-}
-
-# Emit a less-than type comparison
-sub emit_ltcomparison {
-    my ( $startlabel, $var1, $var2, $jump, $op ) = @_;
-
-    printf( $OUT "$startlabel:\tCLC\t\t# $var1 $op $var2\n" );
-    printf( $OUT "\tLMA %slo\n", $var1 );
-    printf( $OUT "\tLMB %slo\n", $var2 );
-    printf( $OUT "\tSUBM\n" );
-    printf( $OUT "\tLMA %shi\n", $var1 );
-    printf( $OUT "\tLMB %shi\n", $var2 );
-    printf( $OUT "\tSUBM\n" );
-    printf( $OUT "\t$jump\n" );
-}
-
 # Emit an operation with two operands
 sub emit_twoop_operation {
-    my ( $lvar, $var1, $op, $var2 ) = @_;
+    my ( $lvar, $var1, $op, $var2, $jump ) = @_;
     my ($leftisconst, $rightisconst)= (0,0);
     my ($lefttop, $leftbot, $righttop, $rightbot);
-    $lvar = checkvar( $lvar, 1 );
+
+    # Work out the high/low lvar names
+    my ($lvarhi, $lvarlo)=('', '');
+    if ($lvar ne '') {
+      $lvar = checkvar( $lvar, 1 );
+      $lvarhi= $lvar. 'hi';
+      $lvarlo= $lvar. 'lo';
+    }
 
     # Convert operands either to nibbles or
     # identify the variables involved
@@ -158,7 +135,9 @@ sub emit_twoop_operation {
     } else {
       printf( $OUT "\tLMB %slo\n", $var2 );
     }
-    printf( $OUT "\t$aluinstruction %slo\n", $lvar );
+    printf( $OUT "\t$aluinstruction %s\n", $lvarlo );
+    # Intermediate jump for == and !=
+    printf( $OUT "\t$jump\n") if (defined($jump));
     if ($leftisconst) {
       printf( $OUT "\tLCA 0x%x\n", $lefttop);
     } else {
@@ -169,7 +148,15 @@ sub emit_twoop_operation {
     } else {
       printf( $OUT "\tLMB %shi\n", $var2 );
     }
-    printf( $OUT "\t$aluinstruction %shi\n", $lvar );
+    printf( $OUT "\t$aluinstruction %s\n", $lvarhi );
+}
+
+# Emit a less-than type comparison
+sub emit_comparison {
+    my ( $startlabel, $var1, $var2, $jump, $op, $jump2 ) = @_;
+    printf( $OUT "$startlabel:\t\t\t# $var1 $op $var2\n" );
+    emit_twoop_operation( '', $var1, '-', $var2, $jump2 );
+    printf( $OUT "\t$jump\n" );
 }
 
 # Deal with the end of a function
@@ -258,13 +245,9 @@ while (<$IN>) {
     if (m{(if|while)\s*\(\s*(\S+)\s+(\S+)\s+(\S+)\s*\)\s*\{}) {
         my ( $keyword, $var1, $op, $var2 ) = ( $1, $2, $3, $4 );
 
-        $var1 = checkvar( $var1, 1 );
-        $var2 = checkvar( $var2, 1 );
-
         # Get a start label, an end label and an ok label
         my $startlabel = newlabel();
         my $endlabel   = newlabel();
-        my $oklabel    = newlabel();
         if ( $keyword eq "while" ) {
             push( @Loopstack,
                 [ "LOOP", "\tJMP $startlabel\n$endlabel:\n", $endlabel ] );
@@ -273,34 +256,24 @@ while (<$IN>) {
         }
 
         if ( $op eq "==" ) {
-            emit_eqcomparison( $startlabel, $var1, $var2, "JNE $endlabel",
-                "JNE $endlabel", $oklabel, $op
-            );
+            emit_comparison( $startlabel, $var1, $var2, "JNE $endlabel",
+		 $op, "JNE $endlabel" );
         }
-
         if ( $op eq "!=" ) {
-            emit_eqcomparison( $startlabel, $var1, $var2, "JNE $oklabel",
-                "JEQ $endlabel", $oklabel, $op );
+            emit_comparison( $startlabel, $var1, $var2, "JEQ $endlabel",
+		$op, "JEQ $endlabel" );
         }
-
         if ( $op eq "<" ) {
-            emit_ltcomparison( $startlabel, $var1, $var2, "JGE $endlabel",
-                $op );
+            emit_comparison( $startlabel, $var1, $var2, "JGE $endlabel", $op );
         }
-
         if ( $op eq ">=" ) {
-            emit_ltcomparison( $startlabel, $var1, $var2, "JLT $endlabel",
-                $op );
+            emit_comparison( $startlabel, $var1, $var2, "JLT $endlabel", $op );
         }
-
         if ( $op eq ">" ) {
-            emit_ltcomparison( $startlabel, $var2, $var1, "JGE $endlabel",
-                $op );
+            emit_comparison( $startlabel, $var2, $var1, "JGE $endlabel", $op );
         }
-
         if ( $op eq "<=" ) {
-            emit_ltcomparison( $startlabel, $var2, $var1, "JLT $endlabel",
-                $op );
+            emit_comparison( $startlabel, $var2, $var1, "JLT $endlabel", $op );
         }
         next;
     }

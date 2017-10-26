@@ -50,6 +50,7 @@ assignment operation. Here is the available syntax:
 <blockquote>
 <i>name</i>= <i>name2</i>;<br>
 <i>name</i>= <i>constant</i>;<br>
+<i>name</i>= <i>constant</i> <i>op</i> <i>constant</i>;<br>
 <i>name</i>= <i>name2</i> <i>op</i> <i>constant</i>;<br>
 <i>name</i>= <i>constant</i> <i>op</i> <i>name2</i>;<br>
 <i>name</i>= <i>name2</i> <i>op</i> <i>name3</i>;
@@ -87,8 +88,8 @@ The language supports if statements that are on one line:
 
 > if (*name1* *op* *name2*) {
 
-where the names are variables and the operations include ```==```, ```!=```,
-```<```, ```>```, ```<=``` and ```>=```.
+where the names are variables or numeric constants and the operations
+include ```==```, ```!=```, ```<```, ```>```, ```<=``` and ```>=```.
 
 ## Else Statement
 
@@ -104,7 +105,9 @@ There is a while loop with the syntax:
 
 > while (*name1* *op* *name2*) {
 
-and there is a second syntax for an infinite loop:
+where the names are variables or numeric constants and the operations
+include ```==```, ```!=```, ```<```, ```>```, ```<=``` and ```>=```.
+There is a second syntax for an infinite loop:
 
 > while (1) {
 
@@ -128,22 +131,21 @@ just like the C command.
 
 ## Printing out Characters
 
-The *putchar()* syntax allows you to print out certain things:
+The *putchar()* syntax allows you to print out an ASCII character:
 
 
 <blockquote>
+putchar(69);<br>
 putchar(<i>name</i>);<br>
 putchar('<i>x</i>');<br>
 putchar('\n');
 </blockquote>
 
-where *name* is a variable and *x* is a single character. Note: when printing
-a variable, its value in decimal is **not** printed out. Instead, the ASCII
-character with the *name*'s value is printed out. So:
+where *name* is a variable and *x* is a single character. Example:
 
 ```
    var x;
-   x= 61;
+   x= 65;
    putchar(x);
 ```
 
@@ -155,7 +157,7 @@ A function is declared with the syntax:
 
 > function *name*(*param*) {
 
-where the name is compulsory, but the parameter is optional.
+where the name is compulsory, but the single parameter is optional.
 
 A function is ended with a closed curly bracket on a line by itself:
 
@@ -167,8 +169,8 @@ compiler insert a jump to *main* as the first instruction in the assembly
 output. Due to the CPU's architecture, there can no more than sixteen
 different calls to one function.
 
-The parameter named in the function declaration is visible as a variable
-with that name in the function.
+The parameter named in the function declaration is visible as a local
+variable with that name in the function.
 
 ## Returning from a Function
 
