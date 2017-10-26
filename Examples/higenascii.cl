@@ -4,24 +4,17 @@
 
 function main() {
   var x;
-  var sixtyfour;
-  var ninetysix;
-  var tilde;
-
-  sixtyfour= 64;
-  ninetysix= 96;
-  tilde= 126;
 
   while (1) {
     x= 32;
     while (1) {
-      if (x == sixtyfour) {
+      if (x == 64) {
 	putchar('\n');
       }
-      if (x == ninetysix) {
+      if (x == 96) {
 	putchar('\n');
       }
-      if (x == tilde) {
+      if (x == 126) {	// Is it a '~' ?
 	putchar('\n');
 	break;
       }

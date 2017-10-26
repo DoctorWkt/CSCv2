@@ -23,9 +23,8 @@ function main() {
   var start;
   var end;
   start=1;
-  end=70;
 
-  while (start < end) {
+  while (start < 70) {
     starline(start);
     start++;
   }
