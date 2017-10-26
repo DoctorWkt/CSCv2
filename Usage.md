@@ -104,6 +104,14 @@ PC b flags 0 address 8 cntrl d8 B now 1
 PC c flags 0 address c cntrl 38 DADD: A 1 B 1 Cin 0 RAM c now 2, NZVC 0
 ```
 
+If you want to slow the clock speed down in ```csim``, use this option:
+
+```
+./csim -c 1000
+```
+
+to set the clock speed to approximately 1,000Hz.
+
 # Using Logisim
 
 The *crazycpu.circ* is a version of the CPU that runs in the
