@@ -151,6 +151,19 @@ where *name* is a variable and *x* is a single character. Example:
 
 will print out an uppercase 'A'.
 
+## Printing out Numbers
+
+The *prhex()* and *prhexn()* syntax allows you to print out a variable as
+two hex digits:
+
+<blockquote>
+prhex(<i>name</i>);  // Two hex digits, nothing else<br>
+prhexn(<i>name</i>); // Two hex digits and a newline character
+</blockquote>
+
+Note that *prhex()* takes nine instructions and *prhexn()* takes eleven
+instructions, so use these operations sparingly!
+
 ## Function Declaration
 
 A function is declared with the syntax:

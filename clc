@@ -342,6 +342,30 @@ while (<$IN>) {
         next;
     }
 
+    # prhex(n)
+    if (m{prhex(n?)\((.+)\);}) {
+      my ($n, $arg)= ($1, $2);
+      $arg = checkvar( $arg, 1 );
+      printf( $OUT "\tLMB %shi\t\t# prhex$n $arg\n", $arg);
+      printf( $OUT "\tTBF\n");
+      printf( $OUT "\tLCA 3 | NzVc LCA 4 | NzVC LCA 4 | NZvc LCA 4 | " .
+		"NZvC LCA 4 | NZVc LCA 4 | NZVC LCA 4\n");
+      printf( $OUT "\tNOP | NzVc LCB 1 | NzVC LCB 2 | NZvc LCB 3 | " .
+		"NZvC LCB 4 | NZVc LCB 5 | NZVC LCB 6\n");
+      printf( $OUT "\tDMAB %slo\n", $arg);
+      printf( $OUT "\tTBF\n");
+      printf( $OUT "\tLCA 3 | NzVc LCA 4 | NzVC LCA 4 | NZvc LCA 4 | " .
+		"NZvC LCA 4 | NZVc LCA 4 | NZVC LCA 4\n");
+      printf( $OUT "\tNOP | NzVc LCB 1 | NzVC LCB 2 | NZvc LCB 3 | " .
+		"NZvC LCB 4 | NZVc LCB 5 | NZVC LCB 6\n");
+      printf( $OUT "\tDAB 0\n");
+      if ($n eq 'n') {
+        printf( $OUT "\tLCB 0xA\n");
+        printf( $OUT "\tDAB\n");
+      }
+      next;
+    }
+
     # Postincrement
     if (m{(\S+)\+\+;}) {
         my $var1 = $1;
