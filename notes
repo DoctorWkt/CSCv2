@@ -222,3 +222,8 @@ Chris thinks he's also having LED current draw issues. Wish there was a
 component that was a LED array, LED drivers and limit resistors all in one
 unit. I found a way to print two hex digits in 9 instructions, so I've
 added prhex() and prhexn() to the compiler to do this.
+
+Thursday 26 October  16:24:12 AEST 2017
+---------------------------------------
+Just heard from Chris Baird on twitter: he's fixed up some wiring issues
+and his wire wrap CSCv2 is now working perfectly. Congrats to him.
