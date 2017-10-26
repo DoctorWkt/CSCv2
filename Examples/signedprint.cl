@@ -3,38 +3,32 @@
 
 // Print out the parameter in decimal
 function printdec(x) {
-  var onehundred;
-  var zero;
   var tencount;
   var asciizero;
-  var ten;
   var hundredormore;
 
-  onehundred=100;
-  zero=0;
   tencount= 48;		// ASCII '0'
   asciizero= 48;	// ASCII '0'
-  ten= 10;
   hundredormore= 0;	// Will be !0 if x >= 100
 
 
   // Print out sign
-  if (x < zero) {
+  if (x < 0) {
     putchar('-');
-    x= zero - x;
+    x= 0 - x;
   }
 
   // Print out any hundred digit
-  if (x >= onehundred) {
+  if (x >= 100) {
     putchar('1');
-    x= x - onehundred;
-    hundredormore= 10;	// "Boolean" flag :)
+    x= x - 100;
+    hundredormore= 1;	// "Boolean" flag :)
   }
 
   // Count number of ten digits
-  while (x >= ten) {
+  while (x >= 10) {
     tencount++;
-    x= x - ten;
+    x= x - 10;
   }
 
   // What we want: print out the tencount
@@ -42,7 +36,7 @@ function printdec(x) {
   // originally 100 or more. But we don't
   // have an OR operator. So, use nested if
   // statements and print in the right places!
-  if (hundredormore == ten) {
+  if (hundredormore == 1) {
       putchar(tencount);
   } else {
     if (tencount > asciizero) {
@@ -58,14 +52,12 @@ function printdec(x) {
 
 function main() {
   var num;
-  var lowest;
-  lowest= -128;
 
-  num= lowest;
+  num= -128;
   while (1) {
     printdec(num);
     num++;
-    if (num == lowest) {
+    if (num == -128) {
       break;
     }
   }
