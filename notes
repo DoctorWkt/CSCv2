@@ -247,10 +247,10 @@ be possible to build an 8-bit version of the CSC. You'd need:
 	      register for the flags. So some combination of 74LS161s
 	      and/or CD4508Bs.
 - ALU:	      Two 8Kx8 EEPROMs, with the carry out of the low side
-	      connected to Cin on the high side. Use the NZVC from
-	      the high side only. Or, if you get adventurous, send some
-	      spare bits from each half to the other to do 1-, 2- and
-	      perhaps 3-bit or 4-bit shifts.
+	      connected to Cin on the high side, ditto a zero line
+	      from low to high. Use the NZVC from the high side only.
+	      Or, if you get adventurous, send some spare bits from each
+              half to the other to do 1-, 2- and perhaps 3-bit shifts.
 - clock:      Unchanged.
 
 In total:     4+2+1+1+2+3+2+1=16 chips, two more for the UART=18 chips
@@ -263,3 +263,10 @@ PASSA + Aload + Bload + RAMwrite, and the UART reads from the bus.
 For input, it can place data on the bus which can be loaded with an
 Aload or Bload. What we'd need is a way to disable the ALU, so we would
 have to split the RAMwrite signal into two separate signals.
+
+Sunday 29 October  09:01:21 AEST 2017
+-------------------------------------
+E-mail from Chris, he's suffering UART output issues too. I had another
+look at the datasheet for the UM254R. Looks like /TXE has to go high
+after /WE goes low, but the delay can be as low as 0ns. So perhaps
+a NOT on the /WE signal to turn it into the /TXE signal?
