@@ -270,3 +270,15 @@ E-mail from Chris, he's suffering UART output issues too. I had another
 look at the datasheet for the UM254R. Looks like /TXE has to go high
 after /WE goes low, but the delay can be as low as 0ns. So perhaps
 a NOT on the /WE signal to turn it into the /TXE signal?
+
+Mon  6 Nov 08:11:45 AEST 2017
+-----------------------------
+It's been a while. Chris found that using two cascaded ORs with Aload, Bload
+and Clk seems to fix the UART output. That implies the UART fires on falling
+clock signal. He has now got an LCD display attached to the CPU which is
+truly amazing.
+
+I've decided to rewire the whole CPU, so that the chips are more evenly
+spread out across three breadboards. It's given me a chance to video the
+build stages, with descriptions of specific components and to show some
+testing. I've done the ALU, A & B registers and the multiplexer.
