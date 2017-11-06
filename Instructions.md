@@ -225,7 +225,7 @@ to the set (or cleared) flags.
 Here is a full example. Consider the instruction line:
 
 ```
-	LCA 2, Nz LCA 3, LCA 4
+	LCA 2 | Nz LCA 3 | LCA 4
 ```
 
 The *cas* assembler will place the instructions in these sixteen positions:
