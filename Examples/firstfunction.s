@@ -36,5 +36,5 @@ printdigit: SMA caller	# Save caller id
 	DMAB caller	# Print newline, get caller
 	TBF		# Transfer caller to flags
 			# Jump based on flags value
-	nzvc JMP enddigit2 | nzvC JMP enddigit4 | \
-		nzVc JMP enddigit6 | nzVC JMP enddigit8
+	JMP enddigit2 | JMP enddigit4 | \
+		JMP enddigit6 | JMP enddigit8

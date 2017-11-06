@@ -35,63 +35,63 @@ init:       LCA 0
 loop:       LCB 1
             LMA 1
             SMIA 1
-            xxxc JMP incend | xxxC LCB 2
+            JMP incend | C LCB 2
 
             LMA 2
             SMIA 2
-	    xxxc JMP incend | xxxC LCB 3
+	    JMP incend | C LCB 3
 
             LMA 3
             SMIA 3
-	    xxxc JMP incend | xxxC LCB 4
+	    JMP incend | C LCB 4
 
             LMA 4
             SMIA 4
-	    xxxc JMP incend | xxxC LCB 5
+	    JMP incend | C LCB 5
 
             LMA 5
             SMIA 5
-	    xxxc JMP incend | xxxC LCB 6
+	    JMP incend | C LCB 6
 
             LMA 6
             SMIA 6
-	    xxxc JMP incend | xxxC LCB 7
+	    JMP incend | C LCB 7
 
             LMA 7
             SMIA 7
-	    xxxc JMP incend | xxxC LCB 8
+	    JMP incend | C LCB 8
 
             LMA 8
             SMIA 8
-	    xxxc JMP incend | xxxC LCB 9
+	    JMP incend | C LCB 9
 
             LMA 9
             SMIA 9
-	    xxxc JMP incend | xxxC LCB 10
+	    JMP incend | C LCB 10
 
             LMA 10
             SMIA 10
-	    xxxc JMP incend | xxxC LCB 11
+	    JMP incend | C LCB 11
 
             LMA 11
             SMIA 11
-	    xxxc JMP incend | xxxC LCB 12
+	    JMP incend | C LCB 12
 
             LMA 12
             SMIA 12
-	    xxxc JMP incend | xxxC LCB 13
+	    JMP incend | C LCB 13
 
             LMA 13
             SMIA 13
-	    xxxc JMP incend | xxxC LCB 14
+	    JMP incend | C LCB 14
 
             LMA 14
             SMIA 14
-	    xxxc JMP incend | xxxC LCB 15
+	    JMP incend | C LCB 15
 
             LMA 15
             SMIA 15
-	    xxxc JMP incend | xxxC LCB 16
+	    JMP incend | C LCB 16
 
             LMA 16
             SMIA 16
@@ -99,7 +99,7 @@ loop:       LCB 1
 
 incend:     LMA HIGH
             SUBM TEMP
-            JMP notbumped | xZxx SMB HIGH | xxxC SMB HIGH
+            JMP notbumped | Z SMB HIGH | C SMB HIGH
 
             LCA 3
             DAB 2       # MSD
@@ -109,130 +109,130 @@ incend:     LMA HIGH
 
 	    LMB 16
             SMB TEMP1
-            xZxx JMP num16 | xzxx DADDM
-            xzxx JMP num16 | xZxx LCA 7
+            Z JMP num16 | z DADDM
+            z JMP num16 | Z LCA 7
             ADDMB
-num16:      xxxc LCA 3 | xxxC LCA 4
+num16:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 15
             SMB TEMP1
-            xZxx JMP num15 | xzxx DADDM
-            xzxx JMP num15 | xZxx LCA 7
+            Z JMP num15 | z DADDM
+            z JMP num15 | Z LCA 7
             ADDMB
-num15:      xxxc LCA 3 | xxxC LCA 4
+num15:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 14
             SMB TEMP1
-            xZxx JMP num14 | xzxx DADDM
-            xzxx JMP num14 | xZxx LCA 7
+            Z JMP num14 | z DADDM
+            z JMP num14 | Z LCA 7
             ADDMB
-num14:      xxxc LCA 3 | xxxC LCA 4
+num14:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 13
             SMB TEMP1
-            xZxx JMP num13 | xzxx DADDM
-            xzxx JMP num13 | xZxx LCA 7
+            Z JMP num13 | z DADDM
+            z JMP num13 | Z LCA 7
             ADDMB
-num13:      xxxc LCA 3 | xxxC LCA 4
+num13:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 12
             SMB TEMP1
-            xZxx JMP num12 | xzxx DADDM
-            xzxx JMP num12 | xZxx LCA 7
+            Z JMP num12 | z DADDM
+            z JMP num12 | Z LCA 7
             ADDMB
-num12:      xxxc LCA 3 | xxxC LCA 4
+num12:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 11
             SMB TEMP1
-            xZxx JMP num11 | xzxx DADDM
-            xzxx JMP num11 | xZxx LCA 7
+            Z JMP num11 | z DADDM
+            z JMP num11 | Z LCA 7
             ADDMB
-num11:      xxxc LCA 3 | xxxC LCA 4
+num11:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 10
             SMB TEMP1
-            xZxx JMP num10 | xzxx DADDM
-            xzxx JMP num10 | xZxx LCA 7
+            Z JMP num10 | z DADDM
+            z JMP num10 | Z LCA 7
             ADDMB
-num10:      xxxc LCA 3 | xxxC LCA 4
+num10:      LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 9
             SMB TEMP1
-            xZxx JMP num9 | xzxx DADDM
-            xzxx JMP num9 | xZxx LCA 7
+            Z JMP num9 | z DADDM
+            z JMP num9 | Z LCA 7
             ADDMB
-num9:       xxxc LCA 3 | xxxC LCA 4
+num9:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 8
             SMB TEMP1
-            xZxx JMP num8 | xzxx DADDM
-            xzxx JMP num8 | xZxx LCA 7
+            Z JMP num8 | z DADDM
+            z JMP num8 | Z LCA 7
             ADDMB
-num8:       xxxc LCA 3 | xxxC LCA 4
+num8:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 7
             SMB TEMP1
-            xZxx JMP num7 | xzxx DADDM
-            xzxx JMP num7 | xZxx LCA 7
+            Z JMP num7 | z DADDM
+            z JMP num7 | Z LCA 7
             ADDMB
-num7:       xxxc LCA 3 | xxxC LCA 4
+num7:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 6
             SMB TEMP1
-            xZxx JMP num6 | xzxx DADDM
-            xzxx JMP num6 | xZxx LCA 7
+            Z JMP num6 | z DADDM
+            z JMP num6 | Z LCA 7
             ADDMB
-num6:       xxxc LCA 3 | xxxC LCA 4
+num6:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 5
             SMB TEMP1
-            xZxx JMP num5 | xzxx DADDM
-            xzxx JMP num5 | xZxx LCA 7
+            Z JMP num5 | z DADDM
+            z JMP num5 | Z LCA 7
             ADDMB
-num5:       xxxc LCA 3 | xxxC LCA 4
+num5:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 4
             SMB TEMP1
-            xZxx JMP num4 | xzxx DADDM
-            xzxx JMP num4 | xZxx LCA 7
+            Z JMP num4 | z DADDM
+            z JMP num4 | Z LCA 7
             ADDMB
-num4:       xxxc LCA 3 | xxxC LCA 4
+num4:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 3
             SMB TEMP1
-            xZxx JMP num3 | xzxx DADDM
-            xzxx JMP num3 | xZxx LCA 7
+            Z JMP num3 | z DADDM
+            z JMP num3 | Z LCA 7
             ADDMB
-num3:       xxxc LCA 3 | xxxC LCA 4
+num3:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 2
             SMB TEMP1
-            xZxx JMP num2 | xzxx DADDM
-            xzxx JMP num2 | xZxx LCA 7
+            Z JMP num2 | z DADDM
+            z JMP num2 | Z LCA 7
             ADDMB
-num2:       xxxc LCA 3 | xxxC LCA 4
+num2:       LCA 3 | C LCA 4
             DAB 0
 
 	    LMB 1
             SMB TEMP1
-            xZxx JMP num1 | xzxx DADDM
-            xzxx JMP num1 | xZxx LCA 7
+            Z JMP num1 | z DADDM
+            z JMP num1 | Z LCA 7
             ADDMB
-num1:       xxxc LCA 3 | xxxC LCA 4
+num1:       LCA 3 | C LCA 4
             DAB 0
 
             LCB 10

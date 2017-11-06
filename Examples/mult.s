@@ -76,32 +76,32 @@ prnib:  EQU 254
 	LMB  c
 	ADDM out1	# out1= out1 + c
 			# Increment out2 if a carry
-	NOP | xxxC LMA  out2
-	NOP | xxxC SMIA out2
+	NOP | C LMA  out2
+	NOP | C SMIA out2
 
 	CLC
 	LMA  out1
 	LMB  e
 	ADDM out1	# out1= out1 + e
 			# Increment f if a carry
-	NOP | xxxC LMA  f
-	NOP | xxxC SMIA f
+	NOP | C LMA  f
+	NOP | C SMIA f
 
 	CLC
 	LMA  out2
 	LMB  f
 	ADDM out2	# out2= out2 + f
 			# Increment out3 if a carry
-	NOP | xxxC LMA  out3
-	NOP | xxxC SMIA out3
+	NOP | C LMA  out3
+	NOP | C SMIA out3
 
 	CLC
 	LMA  out2
 	LMB  g
 	ADDM out2	# out2= out2 + g
 			# Increment out3 if a carry
-	NOP | xxxC LMA  out3
-	NOP | xxxC SMIA out3
+	NOP | C LMA  out3
+	NOP | C SMIA out3
 
 			# out3/out2/out1/out0 are now done
 
@@ -171,11 +171,11 @@ prhex:
         CLC
         LCA 7
         ADDMB                           # B=B+7, flags set
-        LMB prnib | xzxC NOP            # Reload the digit if 0-9
-        LCA 3  | xzxC LCA  4
+        LMB prnib | C NOP               # Reload the digit if 0-9
+        LCA 3  | C LCA  4
         DMAB caller                     # Print the digit, get caller
         TBF
-        nzvc JMP ret0 | nzvC JMP ret1 | nzVc JMP ret2 | nzVC JMP ret3 |    \
-         nZvc JMP ret4 | nZvC JMP ret5 | nZVc JMP ret6 | nZVC JMP ret7 |   \
-         Nzvc JMP ret8 | NzvC JMP ret9 | NzVc JMP ret10 | NzVC JMP ret11 | \
-         NZvc JMP ret12 | NZvC JMP ret13 | NZVc JMP ret14 | NZVC JMP ret15
+        JMP ret0 | JMP ret1 | JMP ret2 | JMP ret3 |    \
+         JMP ret4 | JMP ret5 | JMP ret6 | JMP ret7 |   \
+         JMP ret8 | JMP ret9 | JMP ret10 | JMP ret11 | \
+         JMP ret12 | JMP ret13 | JMP ret14 | JMP ret15

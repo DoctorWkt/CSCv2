@@ -51,42 +51,42 @@ sortstart:
 	TBF
 			# See if adjacent elements
 			# are out of order
-	LMA 0 | nzvC LMA 1 | nzVc LMA 2 | nzVC LMA 3 | 			\
-	 nZvc LMA 4 | nZvC LMA 5 | nZVc LMA 6 | nZVC LMA 7 | 		\
-	 Nzvc LMA 8 | NzvC LMA 9 | NzVc LMA 10 | NzVC LMA 11 | 		\
-	 NZvc LMA 12 | NZvC LMA 13 | NZVc LMA 14 | NZVC JMP prdigits
-	LMB 1 | nzvC LMB 2 | nzVc LMB 3 | nzVC LMB 4 | 			\
-	 nZvc LMB 5 | nZvC LMB 6 | nZVc LMB 7 | nZVC LMB 8 | 		\
-	 Nzvc LMB 9 | NzvC LMB 10 | NzVc LMB 11 | NzVC LMB 12 | 	\
-	 NZvc LMB 13 | NZvC LMB 14 | NZVc LMB 15 | NZVC NOP
+	LMA 0 | LMA 1 | LMA 2 | LMA 3 | 		\
+	  LMA 4 | LMA 5 | LMA 6 | LMA 7 | 		\
+	  LMA 8 | LMA 9 | LMA 10 | LMA 11 | 		\
+	  LMA 12 | LMA 13 | LMA 14 | JMP prdigits
+	LMB 1 | LMB 2 | LMB 3 | LMB 4 | 		\
+	  LMB 5 | LMB 6 | LMB 7 | LMB 8 | 		\
+	  LMB 9 | LMB 10 | LMB 11 | LMB 12 | 		\
+	  LMB 13 | LMB 14 | LMB 15 | NOP
 	CLC
 	SUBM
 	JCS inorder	# They are in order,
 			# otherwise swap them
 	LMB index
 	TBF
-	LMA 0 | nzvC LMA 1 | nzVc LMA 2 | nzVC LMA 3 | 			\
-	 nZvc LMA 4 | nZvC LMA 5 | nZVc LMA 6 | nZVC LMA 7 | 		\
-	 Nzvc LMA 8 | NzvC LMA 9 | NzVc LMA 10 | NzVC LMA 11 | 		\
-	 NZvc LMA 12 | NZvC LMA 13 | NZVc LMA 14 | NZVC NOP
+	LMA 0 | LMA 1 | LMA 2 | LMA 3 | 		\
+	  LMA 4 | LMA 5 | LMA 6 | LMA 7 | 		\
+	  LMA 8 | LMA 9 | LMA 10 | LMA 11 | 		\
+	  LMA 12 | LMA 13 | LMA 14 | NOP
 	SMA temp
 	LMB index
 	TBF
-	LMA 1 | nzvC LMA 2 | nzVc LMA 3 | nzVC LMA 4 | 			\
-	 nZvc LMA 5 | nZvC LMA 6 | nZVc LMA 7 | nZVC LMA 8 |		\
-	 Nzvc LMA 9 | NzvC LMA 10 | NzVc LMA 11 | NzVC LMA 12 | 	\
-	 NZvc LMA 13 | NZvC LMA 14 | NZVc LMA 15 | NZVC NOP
-	SMA 0 | nzvC SMA 1 | nzVc SMA 2 | nzVC SMA 3 | 			\
-	 nZvc SMA 4 | nZvC SMA 5 | nZVc SMA 6 | nZVC SMA 7 |		\
-	 Nzvc SMA 8 | NzvC SMA 9 | NzVc SMA 10 | NzVC SMA 11 |		\
-	 NZvc SMA 12 | NZvC SMA 13 | NZVc SMA 14 | NZVC NOP
+	LMA 1 | LMA 2 | LMA 3 | LMA 4 | 		\
+	  LMA 5 | LMA 6 | LMA 7 | LMA 8 |		\
+	  LMA 9 | LMA 10 | LMA 11 | LMA 12 | 		\
+	  LMA 13 | LMA 14 | LMA 15 | NOP
+	SMA 0 | SMA 1 | SMA 2 | SMA 3 | 		\
+	  SMA 4 | SMA 5 | SMA 6 | SMA 7 |		\
+	  SMA 8 | SMA 9 | SMA 10 | SMA 11 |		\
+	  SMA 12 | SMA 13 | SMA 14 | NOP
 	LMB index
 	TBF
 	LMA temp
-	SMA 1 | nzvC SMA 2 | nzVc SMA 3 | nzVC SMA 4 | 			\
-	 nZvc SMA 5 | nZvC SMA 6 | nZVc SMA 7 | nZVC SMA 8 | 		\
-	 Nzvc SMA 9 | NzvC SMA 10 | NzVc SMA 11 | NzVC SMA 12 | 	\
-	 NZvc SMA 13 | NZvC SMA 14 | NZVc SMA 15 | NZVC NOP
+	SMA 1 | SMA 2 | SMA 3 | SMA 4 |			\
+	  SMA 5 | SMA 6 | SMA 7 | SMA 8 | 		\
+	  SMA 9 | SMA 10 | SMA 11 | SMA 12 | 		\
+	  SMA 13 | SMA 14 | SMA 15 | NOP
 			# Set that there was a swap
 	LCA 1
 	SMA didswap
@@ -175,7 +175,7 @@ ret15:
 			# See if we need to repeat the loop
 	LMB didswap
 	TBF
-	NOP | nzvC JMP sortinit	# Yes, as we did a swap
+	NOP | JMP sortinit	# Yes, as we did a swap
 end:	JMP end
 
 # Function to print out a nibble in hex followed
@@ -186,13 +186,13 @@ prhex:
 	CLC
         LCA 7
         ADDMB                           # B=B+7, flags set
-        LMB prnib | xzxC NOP           	# Reload the digit if 0-9
-        LCA 3  | xzxC LCA  4
+        LMB prnib | zC NOP           	# Reload the digit if 0-9
+        LCA 3  | zC LCA  4
 	DAB 2				# Print the digit
 	LCB 0
         DMAB caller			# Print space, get caller
 	TBF
-	nzvc JMP ret0 | nzvC JMP ret1 | nzVc JMP ret2 | nzVC JMP ret3 |    \
-	 nZvc JMP ret4 | nZvC JMP ret5 | nZVc JMP ret6 | nZVC JMP ret7 |   \
-	 Nzvc JMP ret8 | NzvC JMP ret9 | NzVc JMP ret10 | NzVC JMP ret11 | \
-	 NZvc JMP ret12 | NZvC JMP ret13 | NZVc JMP ret14 | NZVC JMP ret15
+	JMP ret0 | JMP ret1 | JMP ret2 | JMP ret3 |    \
+	 JMP ret4 | JMP ret5 | JMP ret6 | JMP ret7 |   \
+	 JMP ret8 | JMP ret9 | JMP ret10 | JMP ret11 | \
+	 JMP ret12 | JMP ret13 | JMP ret14 | JMP ret15

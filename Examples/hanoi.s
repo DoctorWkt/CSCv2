@@ -102,10 +102,10 @@ movedisk:
 	DAB
 	LMB diskcaller	# Return
 	TBF
-	nzvc JMP diskret0 | nzvC JMP diskret1 | nzVc JMP diskret2 | \
-		nzVC JMP diskret3 | nZvc JMP diskret4 | nZvC JMP diskret5 | \
-		nZVc JMP diskret6 | nZVC JMP diskret7 | Nzvc JMP diskret8 | \
-		NzvC JMP diskret9
+	JMP diskret0 | JMP diskret1 | JMP diskret2 | \
+		JMP diskret3 | JMP diskret4 | JMP diskret5 | \
+		JMP diskret6 | JMP diskret7 | JMP diskret8 | \
+		JMP diskret9
 
 movestack2:
 	# This is effectively the base case for us.
@@ -136,7 +136,7 @@ diskret1:
 diskret2:
 	LMB caller2
 	TBF
-	nzvc JMP stackret3a | nzvC JMP stackret3b
+	JMP stackret3a | JMP stackret3b
 
 movestack3:
 	SMA caller3
@@ -170,7 +170,7 @@ diskret3:
 stackret3b:
 	LMB caller3
 	TBF
-	nzvc JMP stackret4a | nzvC JMP stackret4b
+	JMP stackret4a | JMP stackret4b
 
 movestack4:
 	SMA caller4
@@ -204,7 +204,7 @@ diskret4:
 stackret4b:
 	LMB caller4
 	TBF
-	nzvc JMP stackret5a | nzvC JMP stackret5b
+	JMP stackret5a | JMP stackret5b
 
 movestack5:
 	SMA caller5
@@ -238,7 +238,7 @@ diskret5:
 stackret5b:
 	LMB caller5
 	TBF
-	nzvc JMP stackret6a | nzvC JMP stackret6b
+	JMP stackret6a | JMP stackret6b
 
 movestack6:
 	SMA caller6
@@ -272,7 +272,7 @@ diskret6:
 stackret6b:
 	LMB caller6
 	TBF
-	nzvc JMP stackret7a | nzvC JMP stackret7b
+	JMP stackret7a | JMP stackret7b
 
 movestack7:
 	SMA caller7
@@ -306,7 +306,7 @@ diskret7:
 stackret7b:
 	LMB caller7
 	TBF
-	nzvc JMP stackret8a | nzvC JMP stackret8b
+	JMP stackret8a | JMP stackret8b
 
 movestack8:
 	SMA caller8
@@ -340,7 +340,7 @@ diskret8:
 stackret8b:
 	LMB caller8
 	TBF
-	nzvc JMP stackret9a | nzvC JMP stackret9b
+	JMP stackret9a | JMP stackret9b
 
 movestack9:
 	SMA caller9
@@ -374,4 +374,4 @@ diskret9:
 stackret9b:
 	LMB caller9
 	TBF
-	nzvc JMP stackret10a | nzvC JMP stackret10b
+	JMP stackret10a | JMP stackret10b

@@ -50,7 +50,7 @@ ret1:
 
 	    LMA countlo
 	    ORM
-            NOP | xzxx JMP loop
+            NOP | z JMP loop
 halt:       JMP halt
 
 #
@@ -66,28 +66,28 @@ decloop:
 	    LMA binlo	# test if binlo,hi == 0
 	    LMB binhi
 	    ORM
-	    JMP ret1 | xzxx JMP chompcheck
+	    JMP ret1 | z JMP chompcheck
 
 chompcheck:
 	    LMB binlo
 	    TBF
             # decide on how much to add/sub without making things
             # complicated with the BCD arith
-            nzvx LCA 1 | nzVc LCA 2 | nzVC LCA 3 | nZvc LCA 4 | nZvC LCA 5 | \
+            nzv LCA 1 | nzVc LCA 2 | nzVC LCA 3 | nZvc LCA 4 | nZvC LCA 5 | \
 		nZVc LCA 6 | nZVC LCA 7 | Nzvc LCA 8 | NzvC LCA 9 | \
-		NzVc LCA 9 | NzVC LCA 9 | NZxx LCA 9
+		NzVc LCA 9 | NzVC LCA 9 | NZ LCA 9
             # would also work, and keep things O(ln N)
-            #LCA 1 | xxVc LCA 2 | xZvc LCA 4 | xzvc LCA 8
+            #LCA 1 | Vc LCA 2 | Zvc LCA 4 | zvc LCA 8
 
 	    SMA chomp
 
 	    # add chomp to output, as BCD
             LMB digitO
 	    DADDM digitO
-	    xxxc JMP br1 | xxxC LCA 0
+	    c JMP br1 | C LCA 0
 	    LMB digitT
 	    DADDM digitT
-	    xxxc JMP br1 | xxxC LCA 0
+	    c JMP br1 | C LCA 0
 	    LMB digitH
 	    DADDM digitH
 

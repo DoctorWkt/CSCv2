@@ -10,16 +10,16 @@
         LCA  7
         LMB  10
         ADDMB                           # B=B+7, flags set
-        LMB  10 | xzxC NOP              # Reload the digit if 0-9
-        LCA  3  | xzxC LCA  4
+        LMB  10 | zC NOP              # Reload the digit if 0-9
+        LCA  3  | zC LCA  4
         DAB  7
 
 # Second digit
 	CLC				# Clear carry before the ADD
         LMB  11
         ADDMB                           # B=B+7, flags set
-        LMB  11 | xzxC NOP              # Reload the digit if 0-9
-        LCA  3  | xzxC LCA  4
+        LMB  11 | zC NOP              # Reload the digit if 0-9
+        LCA  3  | zC LCA  4
         DAB  0
 
 # Newline

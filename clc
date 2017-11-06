@@ -372,8 +372,8 @@ while (<$IN>) {
         $var1 = checkvar( $var1, 1 );
         printf( $OUT "\tLMA %slo\t\t# $var1 ++\n", $var1 );
         printf( $OUT "\tSMIA %slo\n",              $var1 );
-        printf( $OUT "\tNOP | xxxC LMA %shi\n",    $var1 );
-        printf( $OUT "\tNOP | xxxC SMIA %shi\n",   $var1 );
+        printf( $OUT "\tNOP | C LMA %shi\n",    $var1 );
+        printf( $OUT "\tNOP | C SMIA %shi\n",   $var1 );
         next;
     }
 
@@ -384,7 +384,7 @@ while (<$IN>) {
         $var1 = checkvar( $var1, 1 );
         printf( $OUT "\tLMA %shi\t\t# $lvar = $var1 >> 4\n", $var1 );
         printf( $OUT "\tSMA %slo\n",                         $lvar );
-        printf( $OUT "\tLCA 0 | Nxxx LCA 0xf\n" );
+        printf( $OUT "\tLCA 0 | N LCA 0xf\n" );
         printf( $OUT "\tSMA %shi\n", $lvar );
         next;
     }

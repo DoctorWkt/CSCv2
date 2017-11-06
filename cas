@@ -94,34 +94,20 @@ my %Inst = (
 
 # Hash of jump instructions and the NZVC combinations on which to jump
 my %JCond = (
-    JZS => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
-             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JEQ => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
-             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JVS => { 0x200 => 1, 0x300 => 1, 0x600 => 1, 0x700 => 1,
-             0xa00 => 1, 0xb00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JCS => { 0x100 => 1, 0x300 => 1, 0x500 => 1, 0x700 => 1,
-             0x900 => 1, 0xb00 => 1, 0xd00 => 1, 0xf00 => 1, },
-    JLE => { 0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1,
-             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
-             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JLT => { 0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
-             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JNS => { 0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1,
-             0xc00 => 1, 0xd00 => 1, 0xe00 => 1, 0xf00 => 1, },
-    JGT => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1, },
-    JGE => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
-             0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1, },
-    JNC => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
-             0x400 => 1, 0x500 => 1, 0x600 => 1, 0x700 => 1, },
-    JZC => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
-             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1, },
-    JVC => { 0x000 => 1, 0x100 => 1, 0x400 => 1, 0x500 => 1,
-             0x800 => 1, 0x900 => 1, 0xc00 => 1, 0xd00 => 1, },
-    JNE => { 0x000 => 1, 0x100 => 1, 0x200 => 1, 0x300 => 1,
-             0x800 => 1, 0x900 => 1, 0xa00 => 1, 0xb00 => 1, },
-    JCC => { 0x000 => 1, 0x200 => 1, 0x400 => 1, 0x600 => 1,
-             0x800 => 1, 0xa00 => 1, 0xc00 => 1, 0xe00 => 1, },
+    JZS => [ 0x4, 0x5, 0x6, 0x7, 0xc, 0xd, 0xe, 0xf ],
+    JEQ => [ 0x4, 0x5, 0x6, 0x7, 0xc, 0xd, 0xe, 0xf ],
+    JVS => [ 0x2, 0x3, 0x6, 0x7, 0xa, 0xb, 0xe, 0xf ],
+    JCS => [ 0x1, 0x3, 0x5, 0x7, 0x9, 0xb, 0xd, 0xf ],
+    JLE => [ 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf ],
+    JLT => [ 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf ],
+    JNS => [ 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf ],
+    JGT => [ 0x0, 0x1, 0x2, 0x3 ],
+    JGE => [ 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 ],
+    JNC => [ 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 ],
+    JZC => [ 0x0, 0x1, 0x2, 0x3, 0x8, 0x9, 0xa, 0xb ],
+    JVC => [ 0x0, 0x1, 0x4, 0x5, 0x8, 0x9, 0xc, 0xd ],
+    JNE => [ 0x0, 0x1, 0x2, 0x3, 0x8, 0x9, 0xa, 0xb ],
+    JCC => [ 0x0, 0x2, 0x4, 0x6, 0x8, 0xa, 0xc, 0xe ]
 );
 
 # Hash of labels
@@ -139,11 +125,11 @@ sub generate_nzvc_values
   # Yes this is hideously slow code. Is there a better way?
   my @Nlist; my @Zlist; my @Vlist; my @Clist;
 
-  for ( my $nzvcvalue = 0x000 ; $nzvcvalue <= 0xf00 ; $nzvcvalue += 0x100 ) {
-    if ($nzvcvalue & 0x800) { @Nlist= ('N', 'x'); } else { @Nlist= ('n', 'x'); }
-    if ($nzvcvalue & 0x400) { @Zlist= ('Z', 'x'); } else { @Zlist= ('z', 'x'); }
-    if ($nzvcvalue & 0x200) { @Vlist= ('V', 'x'); } else { @Vlist= ('v', 'x'); }
-    if ($nzvcvalue & 0x100) { @Clist= ('C', 'x'); } else { @Clist= ('c', 'x'); }
+  for ( my $nzvcvalue = 0 ; $nzvcvalue <= 0xf ; $nzvcvalue ++ ) {
+    if ($nzvcvalue & 0x8) { @Nlist= ('N', ''); } else { @Nlist= ('n', ''); }
+    if ($nzvcvalue & 0x4) { @Zlist= ('Z', ''); } else { @Zlist= ('z', ''); }
+    if ($nzvcvalue & 0x2) { @Vlist= ('V', ''); } else { @Vlist= ('v', ''); }
+    if ($nzvcvalue & 0x1) { @Clist= ('C', ''); } else { @Clist= ('c', ''); }
 
     foreach my $n (@Nlist) {
       foreach my $z (@Zlist) {
@@ -161,7 +147,7 @@ sub generate_nzvc_values
 #  foreach my $s (sort(keys(%NZVC_List))) {
 #    print("$s:");
 #    foreach my $val (@{ $NZVC_List{$s} }) {
-#      printf(" %04x", $val);
+#      printf(" %x", $val);
 #    }
 #    print("\n");
 #  }
@@ -222,7 +208,7 @@ sub parse_line {
         my (@wordlist) = split( m{\s+}, $instruction, 3 );
 
         # If first word has the flags format, remove it
-        if ( $wordlist[0] =~ m{^[Nnx][Zzx][Vvx][Ccx]$} ) {
+        if ( $wordlist[0] =~ m{^[NZVCnzvc]+$} ) {
             $flags = shift(@wordlist);
         }
 
@@ -240,24 +226,34 @@ sub parse_line {
     return (@return_list);
 }
 
-# Given an arrayref representing an instruction, parse it and fill in the
-# ROM values
+# Given an array of arrayrefs representing the instructions
+# at this PC position, parse it and fill in the ROM values
 sub parse_instruction {
-    my $instruction = shift;
 
+  # Fill all 16 instructions with NOPs, in case the only
+  # instruction is a conditional jump instruction
+  foreach my $nzvc (0 .. 0xf) {
+      $ROM[ ($nzvc << 8) + $PC ] = $offlines ^ $nopcode;
+  }
+
+  my $position= -1;			# It is incremented immediately below
+  foreach my $instruction (@_) {	# Deal with each instruction at this PC
+    $position++;
+
+    # Break into the flags, the opcode and the address
     my ( $flags, $op, $addr ) = @{$instruction};
 
     # If no address, assume 255 as a temp location
     $addr = 255 if ( !defined($addr) );
 
+    # Get the 16-bit value to place into the ROM
     my $addrval = getValue($addr);
     my $romval  = $Inst{$op} + $addrval;
 
-    # If we have a flags value, only write romval in certain ROM locations.
-    # Otherwise, write romval to all ROM locations
-    if ( !defined($flags) ) { $flags= "xxxx"; }
-
-    printf("\t%s %s %3s %04x", $flags, $op, $addr, $offlines ^ $romval ) if ($debug);
+    if ($debug) {
+      if ($position) { print(", "); } else { print("\t"); }
+      printf("%s %s %3s %04x", $flags || "", $op, $addr, $offlines ^ $romval );
+    }
     if ( $debug == 2 ) {
         my $ramwrite = ( ( $romval & RAMwrite ) == RAMwrite ) ? 1 : 0;
         print("\t");
@@ -271,30 +267,54 @@ sub parse_instruction {
         print("ALUor ")    if ( $ramwrite && ( $romval & 0x4700 ) == ALUor );
         print("ALUxor ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUxor );
         print("ALUinca ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUinca );
-        print("ALUbflags ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUbflags );
+        print("ALUbflags ")  if ( $ramwrite && ($romval & 0x4700 )== ALUbflags);
         print("ALUzero ")  if ( $ramwrite && ( $romval & 0x4700 ) == ALUzero );
         print("ALUpassa ") if ( $ramwrite && ( $romval & 0x4700 ) == ALUpassa );
         print("ALUpassb ") if ( $ramwrite && ( $romval & 0x4700 ) == ALUpassb );
         print("ALUadd ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUadd );
         print("ALUsub ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUsub );
-        print("ALUmullo ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmullo );
-        print("ALUmulhi ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmulhi );
+        print("ALUmullo ")   if ( $ramwrite && ( $romval & 0x4700 )== ALUmullo);
+        print("ALUmulhi ")   if ( $ramwrite && ( $romval & 0x4700 )== ALUmulhi);
         print("ALUdiv ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUdiv );
         print("ALUmod ")   if ( $ramwrite && ( $romval & 0x4700 ) == ALUmod );
     }
 
-    # Write romval to certain ROM locations
-    foreach my $nzvc (@{ $NZVC_List{$flags} }) {
-
-        # Enable the control lines in the ROM for this instruction
-        $ROM[ $nzvc + $PC ] = $offlines ^ $romval;
-
-        # If this is a conditional jump which doesn't match the NZVC code,
-        # replace the instruction with the $nopcode
-        if ( defined( $JCond{$op} ) && !defined( $JCond{$op}{$nzvc} ) ) {
-            $ROM[ $nzvc + $PC ] = $offlines ^ $nopcode;
-        }
+    # See if this is a conditional jump instruction. If so,
+    # only set the matching NZVC positions with the instruction
+    if ( defined( $JCond{$op} )) {
+      foreach my $nzvc (@{ $JCond{$op} }) {
+#printf("PC %x posn $nzvc op $op $addr (cond)\n", $PC);
+        $ROM[ ($nzvc << 8) + $PC ] = $offlines ^ $romval;
+      }
+      next;		# Don't process any positions now
     }
+
+    # If we have flags, set the instruction in the matching NZVC positions
+    if (defined($flags)) {
+      # Check that the flags are legitimate
+      die("unrecognised flags $flags on line $linenum\n")
+					if ( !defined($NZVC_List{$flags}) );
+      foreach my $nzvc (@{ $NZVC_List{$flags} }) {
+#printf("PC %x posn $nzvc op $op $addr (flags $flags) %x\n", $PC, $romval);
+        $ROM[ ($nzvc << 8) + $PC ] = $offlines ^ $romval;
+      }
+      next;		# Don't process any positions now
+    }
+
+    # Not a conditional instruction, so it must be a positional.
+    # For any position >0, just do one instruction position
+    if ($position) {
+#printf("PC %x posn $position op $op $addr\n", $PC);
+        $ROM[ ($position << 8) + $PC ] = $offlines ^ $romval;
+	next;
+    }
+
+    # Otherwise, fill all 16 instruction positions
+    foreach my $nzvc (0 .. 0xf) {
+        $ROM[ ($nzvc << 8) + $PC ] = $offlines ^ $romval;
+#printf("PC %x posn $nzvc op $op $addr (default) %x\n", $PC, $romval);
+    }
+  }
 }
 
 #### MAIN PROGRAM ####
@@ -379,9 +399,7 @@ foreach my $i (0 .. (@Line - 1)) {
     printf("%02x:", $PC) if ($debug);
 
     # Parse each instruction on the line
-    foreach my $instruction (@instlist) {
-        parse_instruction($instruction);
-    }
+    parse_instruction(@instlist);
 
     $PC++;
     print("\n") if ($debug);

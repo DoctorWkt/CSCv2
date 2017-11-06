@@ -5,7 +5,7 @@
 # We add the 1-4 number to the 5-8 number and store
 # the result in the 9-12 number.
 
-zero:	LCA 0		# Zero most of the first two nums
+	LCA 0		# Zero most of the first two nums
 	SMA 1
 	SMA 5
 	SMA 2
@@ -77,9 +77,6 @@ starhi: EQU 10
 starlo: EQU 11
 nlhi:   EQU 12
 nllo:   EQU 13
-zero:	EQU 14
-eff:	EQU 15
-one:	EQU 16
 
         LCA 0x2		# Initialise the ASCII characters:
         SMA spchi	# space, star, newline
@@ -87,16 +84,11 @@ one:	EQU 16
         LCA 0x0
         SMA nlhi
         SMA spclo
-        SMA zero
         SMA yhi
         SMA ylo
         LCA 0xA
         SMA starlo
         SMA nllo
-	LCA 0xf		# Initialise 0x1, 0xf
-	SMA eff
-	LCA 0x1
-	SMA one
 
 	LCA 0x3		# Set x to decimal 58, 0x36
 	SMA xhi
@@ -105,7 +97,7 @@ one:	EQU 16
 
 loop:	LMA xhi         # Store x>>4 into temp
         SMA tmplo
-        nxxx LMA zero | Nxxx LMA eff
+        LCA 0 | N LCA 0xf
         SMA tmphi
 
 ok1:	CLC
@@ -118,7 +110,7 @@ ok1:	CLC
 
         LMA yhi         # Store y>>4 into temp
         SMA tmplo
-        nxxx LMA zero | Nxxx LMA eff
+        LCA 0 | N LCA 0xf
         SMA tmphi
 
 ok2:	CLC
@@ -142,10 +134,10 @@ ploop:  LMA spchi	# Print out a space
         DAB
 	CLC
         LMA ilo		# Decrement i
-	LMB one
+	LCB 1
 	SUBM ilo
         LMA ihi
-        LMB zero
+        LCB 0
         SUBM ihi
         JNE ploop	# Loop back until it is zero
         LMA starhi

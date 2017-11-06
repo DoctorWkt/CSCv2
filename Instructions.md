@@ -201,24 +201,54 @@ The assembler gives the programmer explict control over this choice as
 well. At each instruction location, you can define which instructions
 to insert for one, many or all sixteen of the NZVC Flags combinations.
 
-Each assembly line can contain multiple instructions. Each instruction can be
-preceded by a four letter keyword that indicates the Flags combination
-that applies to this instruction. Instructions are separated by a
-vertical bar.
+Each assembly line can contain multiple instructions. Instructions are
+separated by a vertical bar. By default, the first instruction on the
+line is placed into all sixteen instruction positions.
 
-The four letter keyword is the regular expression *[Nnx][Zzx][Vvx][Ccx]*.
-Uppercase letters require that flag to be set. Lowercase letters require that
-flag to be clear. Letter 'x' indicates that the flag can be any value.
-
-If the line starts with an instruction with no flags keyword, then this
-instruction is filled in at all sixteen positions. Further instructions
-can then replace this original instruction.
-
-An example of this is the explict definition of the JCS instruction:
+Other instructions are placed in increasing positions, up to the sixteenth
+position. For example, the instruction line:
 
 ```
-	NOP 	| xxxC JMP endloop	# End loop when carry is set
+	LCA 0 | LCB 1 | JMP 3 | ADDM 8
 ```
+
+stores the `LCA 0` instruction into all sixteen positions, and then
+overwrites position 1 with `LCB 1`, position 2 with `JMP 3` and
+position 3 with `ADDM 8`.
+
+You can also prefix an instruction with a word which is a combination
+of the `NZVCnzvc` letters. Uppercase letters require that flag to be set.
+Lowercase letters require that flag to be clear. If this 'flags' word
+appears, then the instruction is placed in those positions that correspond
+to the set (or cleared) flags.
+
+Here is a full example. Consider the instruction line:
+
+```
+	LCA 2, Nz LCA 3, LCA 4
+```
+
+The *cas* assembler will place the instructions in these sixteen positions:
+
+|  Position  | Flags | Instruction        |
+|:----------:|:-----:|--------------------|
+|    0       |  nzvc | LCA 2 (default)    |
+|    1       |  nzvC | LCA 2 (default)    |
+|    2       |  nzVc | LCA 4 (position 2) |
+|    3       |  nzVC | LCA 2 (default)    |
+|    4       |  nZvc | LCA 2 (default)    |
+|    5       |  nZvC | LCA 2 (default)    |
+|    6       |  nZVc | LCA 2 (default)    |
+|    7       |  nZVC | LCA 2 (default)    |
+|    8       |  Nzvc | LCA 3 (Nz)         |
+|    9       |  NzvC | LCA 3 (Nz)         |
+|   10       |  NzVc | LCA 2 (default)    |
+|   11       |  NzVC | LCA 2 (default)    |
+|   12       |  NZvc | LCA 2 (default)    |
+|   13       |  NZvC | LCA 2 (default)    |
+|   14       |  NZVc | LCA 2 (default)    |
+|   15       |  NZVC | LCA 2 (default)    |
+
 
 Here is an example of manually choosing the instructions to perform
 based on the Flags values. We want to print the 4-bit nibble at RAM
@@ -234,8 +264,8 @@ I've numbered each line, and each line is described after the code.
 2.       LCA  7
 3.       LMB  10
 4.       ADDMB                           # B=B+7, flags set
-5.       LMB  10 | xzxC NOP              # Reload the digit if 0-9
-6.       LCA  3  | xzxC LCA  4
+5.       LMB  10 | zC NOP                # Reload the digit if 0-9
+6.       LCA  3  | zC LCA  4
 7.       DAB
 ```
 
@@ -258,15 +288,15 @@ I've numbered each line, and each line is described after the code.
    So, nibble values 10 and upwards, when added to 7, set the carry flag.
    Value 9 also does this, but it sets the zero flag as well.
 
-5. If the carry flag is set but not the zero flag (*xzxC*), do nothing.
+5. If the carry flag is set but not the zero flag (*C*), do nothing.
    We keep B+7 in the B register. For all other flag combinations, reload
    the original nibble value into the B register.
 
-   At this point, we either have flags *xzxC* and B+7 in the B register
+   At this point, we either have flags *zC* and B+7 in the B register
    because the nibble value was 10 .. 15, or we have the original nibble
    value in the B register because the nibble value was 0 .. 9.
 
-6. For nibble values 10 and upwards (*xzxC*), set A to 0x4: we now have
+6. For nibble values 10 and upwards (*zC*), set A to 0x4: we now have
    the correct ASCII character 'A' .. 'F' in the A/B registers.
    For all other nibble values, set A to 0x3: we now have the correct
    ASCII digits '0' .. '9' in the A/B registers.
