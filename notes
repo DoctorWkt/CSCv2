@@ -295,3 +295,15 @@ leave out the NZVC words for simple positional instructions, and to leave
 out the "xx" when checking flags. Nzxx becomes just Nz. Works. I've just
 updated all the examples and the instructions. Chris has sent in some more
 examples.
+
+Monday 6 November  22:18:33 AEST 2017
+-------------------------------------
+Over the past few days, I've been rebuilding the breadboard CSC to be CSCv2.
+As I go, I've been doing some videos of the build, explaining the components
+and showing how they can be tested. So far: ALU, A & B regs, multiplexer.
+Tonight I wired up the Flags register and the data side of the RAM. Subtle
+bug: I hadn't wired the RAM's /CE line low, so I was seeing 2V on its
+outputs :) Now fixed and it's working. I've got a test program which I'll
+run by hand to load constants into A, store in RAM, fetch them back to verify
+that they were stored OK. Tomorrow is Melb Cup day but I hope I can do a
+quick video in the morning.
