@@ -282,3 +282,16 @@ I've decided to rewire the whole CPU, so that the chips are more evenly
 spread out across three breadboards. It's given me a chance to video the
 build stages, with descriptions of specific components and to show some
 testing. I've done the ALU, A & B registers and the multiplexer.
+
+Just realised that the Flags register should have /PE wired to RAMwrite
+as per the csim simulation. All the schematics have it wired low. I've
+told Chris that it should be wired to RAMwrite.
+
+Monday 6 November  17:45:24 AEST 2017
+-------------------------------------
+Chris asked for a cas change to make it easier to enter in 2D instructions.
+Taking his suggestion and modifying it, I was able to get it so we can
+leave out the NZVC words for simple positional instructions, and to leave
+out the "xx" when checking flags. Nzxx becomes just Nz. Works. I've just
+updated all the examples and the instructions. Chris has sent in some more
+examples.
