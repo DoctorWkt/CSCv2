@@ -242,8 +242,8 @@ The *cas* assembler will place the instructions in these sixteen positions:
 |    7       |  nZVC | LCA 2 (default)    |
 |    8       |  Nzvc | LCA 3 (Nz)         |
 |    9       |  NzvC | LCA 3 (Nz)         |
-|   10       |  NzVc | LCA 2 (default)    |
-|   11       |  NzVC | LCA 2 (default)    |
+|   10       |  NzVc | LCA 3 (Nz)         |
+|   11       |  NzVC | LCA 3 (Nz)         |
 |   12       |  NZvc | LCA 2 (default)    |
 |   13       |  NZvC | LCA 2 (default)    |
 |   14       |  NZVc | LCA 2 (default)    |
@@ -345,5 +345,5 @@ printdigit: SMA caller	# Save caller id
 	DMAB caller	# Print newline, get caller id
 	TBF		# Transfer caller to flags
 			# Jump based on flags value
-	nzvc JMP enddigit2 | nzvC JMP enddigit4
+	JMP enddigit2 | JMP enddigit4
 ```
