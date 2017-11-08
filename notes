@@ -314,4 +314,6 @@ I got two videos done yesterday, the RAM video and then I got the PC wired
 up and did a video on that. Today I've done the yellow address wiring which
 was a real PITA. I haven't tested it yet, so that's going to be fun. Chris
 asked for - and ~ unary operators on the numeric values in cas. I've done
-an implementation and sent it to him for testing.
+an implementation and sent it to him for testing. After a few fixes, it now
+works, and I've uploaded it to Github along with a csim change that Chris
+sent in.
