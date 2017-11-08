@@ -307,3 +307,11 @@ outputs :) Now fixed and it's working. I've got a test program which I'll
 run by hand to load constants into A, store in RAM, fetch them back to verify
 that they were stored OK. Tomorrow is Melb Cup day but I hope I can do a
 quick video in the morning.
+
+Wed  8 Nov 11:53:47 AEST 2017
+-----------------------------
+I got two videos done yesterday, the RAM video and then I got the PC wired
+up and did a video on that. Today I've done the yellow address wiring which
+was a real PITA. I haven't tested it yet, so that's going to be fun. Chris
+asked for - and ~ unary operators on the numeric values in cas. I've done
+an implementation and sent it to him for testing.
