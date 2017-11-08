@@ -153,25 +153,46 @@ sub generate_nzvc_values
 #  }
 }
 
-# Given a label or a non-string literal, return its value
+# Given a label or a non-string literal, return its value.
+# Allows decimal, octal if leading 0, hex if leading 0x.
+# Allows
+# Allows ~ as first character to invert.
+# Allows - as first character to negate.
+# Returns an 8-bit value regardless of the input size.
 sub getValue {
-    my $arg = shift;
-
-    die("null argument in getValue on line $linenum\n") if ( !defined($arg) );
-
-    # Decimal number
-    return ($arg) if ( $arg =~ m{^\d+$} );
-
-    # Octal or hexadecimal number
-    return ( oct($arg) ) if ( $arg =~ m{^0} );
-
-    # Literal character
-    return ( ord($1) ) if ( $arg =~ m{^'(.)'} );
+    my $arg = $_[0];
+    die("null argument in getValue\n") if ( !defined($arg) );
 
     # Label
     return ( $Label{$arg} ) if ( defined( $Label{$arg} ) );
 
-    die("Unrecognised literal or label: $arg on line $linenum\n");
+    my ($negate, $invert, $value)= (0,0,0);
+
+    # Find any leading ~ or -character
+    my $lookforleadchar=1;
+    while ($lookforleadchar) {
+      if ($arg =~ m{^\~(.*)}) { $invert=1; $lookforleadchar=1; $arg= $1; next; }
+      if ($arg =~ m{^\-(.*)}) { $negate=1; $lookforleadchar=1; $arg= $1; next; }
+      $lookforleadchar=0;
+    }
+
+    # Otherwise some form of literal
+    if ( $arg =~ m{^0x?[0-9A-Fa-f]+$} ) {
+      # Octal or hexadecimal number
+      $value= oct($arg);
+    } elsif ( $arg =~ m{^\d+$} ) {
+      # Decimal number
+      $value= $arg;
+    } elsif ( $arg =~ m{^'(.)'} ) {
+      # Literal character
+      $value= ord($1);
+    } else {
+      die("Unrecognised literal or label: $_[0]\n");
+    }
+
+    $value= -$value if ($negate);
+    $value= 0xff ^ $value if ($invert);
+    return($value & 0xff);
 }
 
 # Given a line, return an array of information. The first element is the

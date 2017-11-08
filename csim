@@ -9,6 +9,16 @@
 #
 #	-c 1000 simulates a 1,000 Hz clock speed
 #
+#       -l display "LEDS": show instruction counter, and
+#          then a binary representation of PC, Flags, A,
+#          & B registers. If -c option provided, include
+#          the time in seconds
+#       -l -l ...include output port
+#       -l -l -l ...only when display port changes
+#
+# TODO: sleep() on NetBSD is worthless; change to a better watch
+#
+
 use strict;
 use warnings;
 use Data::Dumper;
@@ -31,6 +41,11 @@ my @ALURom;
 my @Ram    = (0) x 256;
 my $debug  = 0;
 my $udelay = 0;           # usleep delay
+my $leddebug = 0;
+my $outputport = " ";
+my $lastoutputport = "";
+my $clocktick = 0;
+my $ledtxt = "";
 
 # Get any optional arguments
 while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
@@ -43,6 +58,11 @@ while ( defined( $ARGV[0] ) && ( $ARGV[0] =~ m{^-} ) ) {
     if ( $ARGV[0] eq "-c" ) {
         shift(@ARGV); $udelay = int( 1000000 / shift(@ARGV) );
         $|++; next;
+    }
+
+    # -l: increase LED display verbosity
+    if ( $ARGV[0] eq "-l" ) {
+        $leddebug++; shift(@ARGV); next;
     }
 }
 
@@ -88,6 +108,16 @@ while (1) {
     printf( "PC %02x %s address %02x cntrl %02x",
         $PC, $FLstr[$NZVC], $address, $TopRom[$romaddr] ) if ($debug);
 
+    if ( $leddebug ) {
+	$clocktick++;
+	$ledtxt = "";
+	if ( $udelay > 0 ) {
+	    $ledtxt = sprintf "T:%08.4f ", ( ($clocktick * $udelay) / 1000000);
+	}
+	$ledtxt .= sprintf "IC:%05d " , $clocktick;
+	$ledtxt .= "PC:" . (unpack "B8", chr($PC));
+    }
+
     # Increment or jump the PC
     if ($PCincr) {
         $PC++;
@@ -99,10 +129,12 @@ while (1) {
     }
 
     # Output an ASCII character
+    undef $outputport;
     if ( ( $Aload == 0 ) && ( $Bload == 0 ) ) {
-        print( chr( ( $A << 4 ) + $B ) ) if ( !$debug );
+	$outputport = chr( ( $A << 4 ) + $B );
+	print( $outputport ) if ( !$debug && !$leddebug );
         printf( ", Printed %02x '%s'", ( $A << 4 ) + $B, chr( ( $A << 4 ) + $B ) )
-          if ($debug);
+	    if ($debug);
     }
 
     # Perform an ALU instruction
@@ -134,6 +166,21 @@ while (1) {
         else         { $B = $address & 0xf; }
         printf( ", Bload  B now %x", $B ) if ($debug);
     }
+
+    if ( $leddebug ) {
+	if ( ( $leddebug == 1 ) || ($outputport  && ($outputport ne $lastoutputport )) ) {
+	    print( $ledtxt );
+	    print( " FL:", (unpack "B4", chr($NZVC<<4)) );
+	    print( " A:", (unpack "B4", chr($A<<4)), " B:", (unpack "B4", chr($B<<4)) );
+	    if ( $outputport ) {
+		print( " OP:", (unpack "B8", $outputport), " ", $outputport );
+	    }
+	    $lastoutputport = $outputport;
+	    print("\n");
+	}
+    }
+
+
     usleep($udelay) if ($udelay);
 
     print("\n") if ($debug);
