@@ -19,12 +19,6 @@ my %ALUop = (
     '^' => 'XORM',
 );
 
-# List of flag combinations
-my @Flag = (
-    'nzvc', 'nzvC', 'nzVc', 'nzVC', 'nZvc', 'nZvC', 'nZVc', 'nZVC',
-    'Nzvc', 'NzvC', 'NzVc', 'NzVC', 'NZvc', 'NZvC', 'NZVc', 'NZVC'
-);
-
 # Stack of instructions to emit at the end of each if or loop
 # Each entry is a 3-element list: type, code and end loop label.
 # End loop label is undef for if statements. First element
@@ -167,7 +161,7 @@ sub end_function {
     printf( $OUT "%sret:\tLMB %scaller\n", $funcname, $funcname );
     print( $OUT "\tTBF\n" );
     foreach my $i ( 0 .. 15 ) {
-        push( @retlist, $Flag[$i] . " JMP " . $funcname . "ret" . $i );
+        push( @retlist, " JMP " . $funcname . "ret" . $i );
     }
     print( $OUT "\t" . join( " | ", @retlist ) . "\n" );
     $funcname = undef;

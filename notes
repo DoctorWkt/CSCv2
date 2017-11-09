@@ -317,3 +317,10 @@ asked for - and ~ unary operators on the numeric values in cas. I've done
 an implementation and sent it to him for testing. After a few fixes, it now
 works, and I've uploaded it to Github along with a csim change that Chris
 sent in.
+
+In the evening, I recorded a video of the Address ROM and a test to show that
+it works. I found that my soldered ZIF socket/IC socket for the Control ROM
+was dodgy, so tomorrow I'll get a better socket. I recorded a test of the
+Control ROM wiring with a ROM plugged directly into the breadboard. I also
+started an architecture slideset to replace the #1 video, once I get CSCv2
+working.
