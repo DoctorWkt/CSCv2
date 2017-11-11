@@ -324,3 +324,12 @@ was dodgy, so tomorrow I'll get a better socket. I recorded a test of the
 Control ROM wiring with a ROM plugged directly into the breadboard. I also
 started an architecture slideset to replace the #1 video, once I get CSCv2
 working.
+
+Sun 12 Nov 07:56:45 AEST 2017
+-----------------------------
+Quite a few things done. I've got it all wired up including the UART. Chris'
+idea of including the clock in the UART signal works great, so I've updated
+the schematic. I've done a bunch more videos and created a Youtube playlist.
+I've redone the architecture video as promised. Chris has got his CSCv2 to
+play "Bicycle Built for Two" on a piezo speaker, which is of course the
+canonical music a CPU should play.
