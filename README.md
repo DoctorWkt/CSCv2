@@ -7,7 +7,7 @@ the CPU itself, see the
 
 The files are:
  * _crazycpu.circ_, a version of the CPU that runs in Logisim
- * _output.pdf_, a PDF version of the CPU's breadboard design done in Kicad
+ * _Schematic.pdf_, a PDF version of the CPU's breadboard design done in Kicad
  * _cas_, the assembler for the CPU
  * _clc_, a very crude compiler that outputs assembly that can be given to _cas_
  * _csim_, a simulator that can run assembled programs. This allows you to test programs without loading them into Logisim or burning ROMs
