@@ -81,8 +81,9 @@ while (<$IN>) {
     $Inst[$PC][$col]= "LCA $lchi"; $PC++;
   }
 
-  # Load the B register if PC 3 or if $lclo != $lchi
-  if (($PC==3) || ($lclo != $lchi)) {
+  # Load the B register if it's different from the A nibble,
+  # or when there is a chance that we haven't done a DAB yet
+  if (($PC<4) || ($lclo != $lchi)) {
     $Inst[$PC][$col]= "LCB $lclo"; $PC++;
   }
 
