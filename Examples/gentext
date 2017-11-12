@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Data::Dumper;
+
+# This program reads a text file and writes a CSC assembly program to
+# print the text out on the serial port. There is a limit on how many
+# characters can be stored: at least 2,000 but more when characters
+# have the same ASCII high and low nibble, e.g " 3 D U f w
+#
+# The resulting assembly code gets the CSC to execute nearly all
+# the possible 4,096 instructions in the control ROM.
+#
+# (c) 2017 Warren Toomey, GPL3
+
+# 2D array of instructions
+my @Inst;
+
+# Instruction at PC 0 loads B with 0.
+# Instruction at PC 1 transfers to the flags.
+# Instruction at PC 254 loads the next B value.
+# Instruction at PC 255 jumps back to PC 1 to
+#   start the next thread of execution.
+
+# Fill all other instructions with NOP for now
+foreach my $i (2 ..253) {
+  foreach my $j (0 ..15) {
+    $Inst[$i][$j]= "NOP";
+  }
+}
+
+# Set PC 254 to load the next B value
+foreach my $j (0 ..14) {
+  $Inst[254][$j]= "LCB " . ($j+1);
+}
+
+# Put in the final infinite loop
+$Inst[254][15]= "JMP 254";
+
+# Set Perl to read one character at a time
+$/ = \1;
+
+die("Usage: $0 textfile\n") if (@ARGV != 1);
+
+my $outfile= $ARGV[0] . ".s";
+
+open(my $IN, "<", $ARGV[0])  || die("Can't open $ARGV[0]: $!\n");
+open(my $OUT, ">", $outfile) || die("Can't write $outfile: $!\n");
+
+# Get the "last" character now, and the "next" character inside the loop
+$_= <$IN>;
+my $lchi= ord($_) >> 4;
+my $lclo= ord($_) & 0xf;
+my ($nchi, $nclo);
+
+# Start at PC 2 in column 0, with 1 char already read in
+my $PC=2;
+my $col=0;
+my $chcount=1;
+
+while (<$IN>) {
+  # Get the next character
+  $nchi= ord($_) >> 4;
+  $nclo= ord($_) & 0xf;
+  $chcount++;
+
+  # Determine # of instructions we need to print the last char
+  my $icount= ($lchi == $lclo) ? 2 : 3;
+
+  # Can we fit this into the current column?
+  if (($PC + $icount) > 254) {
+    die("Out of room at character $chcount\n") if ($col==15);
+
+    # Yes, out of room, so move to next column
+    $col++; $PC=2;
+  }
+
+  # If this is PC 2 col 0, we have to load the A register.
+  # Otherwise, the previous DAB instruction loaded it for us.
+  if (($PC==2) && ($col==0)) {
+    $Inst[$PC][$col]= "LCA $lchi"; $PC++;
+  }
+
+  # Load the B register if PC 3 or if $lclo != $lchi
+  if (($PC==3) || ($lclo != $lchi)) {
+    $Inst[$PC][$col]= "LCB $lclo"; $PC++;
+  }
+
+  # Print out the character and load the next high nibble
+  $Inst[$PC][$col]= "DAB $nchi"; $PC++;
+
+  # Shuffle the character down
+  $lchi= $nchi;
+  $lclo= $nclo;
+}
+
+# Print out the final character
+$Inst[$PC][$col]= "LCB $nclo"; $PC++;
+$Inst[$PC][$col]= "DAB";
+
+# Write out all the instructions
+print($OUT "LCB 0\nTBF\n");
+foreach my $i (2 ..254) {
+  print($OUT join("|", @{ $Inst[$i] }), "\n");
+}
+print($OUT "JMP 1\n");
+close($IN); close($OUT);
+exit(0);
