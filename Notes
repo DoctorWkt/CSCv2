@@ -333,3 +333,11 @@ the schematic. I've done a bunch more videos and created a Youtube playlist.
 I've redone the architecture video as promised. Chris has got his CSCv2 to
 play "Bicycle Built for Two" on a piezo speaker, which is of course the
 canonical music a CPU should play.
+
+Mon 13 Nov 10:33:42 AEST 2017
+-----------------------------
+Wonderful news, Chris has managed to get CSC to run the Game of Life. An
+amazing achievement. I rewrote the Perl program to store and print text,
+with 2000 or a few more characters now able to be stored. Norman Wilson
+wanted a picture of Queen Victoria, so I found a cartoon, converted to
+ASCII and put a video of the CSC printing it out up on Twitter.
