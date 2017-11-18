@@ -49,6 +49,8 @@ my %Inst = (
     LMA   => PCincr + Aload + Asel,                   # Load B from RAM
     LMB   => PCincr + Bload + Asel,                   # Load B from RAM
     ADDM  => PCincr + ALUadd + RAMwrite,              # Store A + B into RAM
+					# Store A + B into RAM and also into A
+    ADDMA => PCincr + ALUadd + RAMwrite + Aload,
 					# Store A + B into RAM and also into B
     ADDMB => PCincr + ALUadd + RAMwrite + Bload,
     SUBM  => PCincr + ALUsub + RAMwrite,              # Store A - B into RAM
@@ -64,11 +66,14 @@ my %Inst = (
     MODM =>  PCincr + ALUmod + RAMwrite,              # Store A % B into RAM
     SMA   => PCincr + ALUpassa + RAMwrite,            # Store A into RAM
     SMIA  => PCincr + ALUinca + RAMwrite,             # Store A + 1 into RAM
-    CLC   => PCincr + ALUzero + RAMwrite,            # Clear carry
+    CLC   => PCincr + ALUzero + RAMwrite,             # Clear carry
     SMB   => PCincr + ALUpassb + RAMwrite,            # Store B into RAM
     TAB   => PCincr + ALUpassa + RAMwrite + Bload,    # Transfer A to B
     TBA   => PCincr + ALUpassb + RAMwrite + Aload,    # Transfer B to B
     NOP   => PCincr,                                  # No operation
+    DBG	  => PCincr + ALUdsub,			      # NOP, print debug info in csim
+    BRK	  => PCincr + ALUand,			      # NOP, break to single step in csim
+    DMP	  => PCincr + ALUor,			      # NOP, dump RAM in csim
     EQU   => PCincr,                                  # Treated as NOP
 			        # Display A and B, load A & B with constant
     DAB   => PCincr + Aload + Bload,                 
@@ -155,16 +160,15 @@ sub generate_nzvc_values
 
 # Given a label or a non-string literal, return its value.
 # Allows decimal, octal if leading 0, hex if leading 0x.
-# Allows
 # Allows ~ as first character to invert.
 # Allows - as first character to negate.
-# Returns an 8-bit value regardless of the input size.
+# Returns an 8-bit positive value or a 4-bit negative value.
 sub getValue {
     my $arg = $_[0];
     die("null argument in getValue\n") if ( !defined($arg) );
 
     # Label
-    return ( $Label{$arg} ) if ( defined( $Label{$arg} ) );
+    return($Label{$arg}) if ( defined( $Label{$arg} ) );
 
     my ($negate, $invert, $value)= (0,0,0);
 
@@ -192,7 +196,7 @@ sub getValue {
 
     $value= -$value if ($negate);
     $value= 0xff ^ $value if ($invert);
-    return($value & 0xff);
+    return( ($value < 0) ? $value & 0xf : $value & 0xff );
 }
 
 # Given a line, return an array of information. The first element is the
@@ -386,7 +390,7 @@ foreach my $i (0 .. (@Line - 1)) {
 
         # An EQU defines the value of this label
         if ( defined($inst1) && ( $inst1->[1] eq "EQU" ) ) {
-            $Label{$label} = $inst1->[2]; next;
+            $Label{$label} = getValue($inst1->[2]); next;
         }
 
         # Otherwise the label's value is the PC's value

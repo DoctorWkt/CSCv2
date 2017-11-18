@@ -341,3 +341,17 @@ amazing achievement. I rewrote the Perl program to store and print text,
 with 2000 or a few more characters now able to be stored. Norman Wilson
 wanted a picture of Queen Victoria, so I found a cartoon, converted to
 ASCII and put a video of the CSC printing it out up on Twitter.
+
+Saturday 18 November  20:05:34 AEST 2017
+----------------------------------------
+I've spent a few days working on life. It runs a bit faster than Chris'
+version, but not as fast as I want it to go. Here are the # instructions:
+
+life.s:    92548 instructions for one screen's worth of output
+wktlife.s: 16301 instructions for one screen's worth of output
+
+That's only 5.6 times faster. I need to try & optimise a bit more!
+I've also added some single-stepping functionality to csim, and some
+pseudo-instructions which allow us to print out the regs and dump the
+RAM in csim. These pseudo-instructions are actually NOPs in real hardware,
+so we can keep them in and still burn ROMs from the machine code output.
