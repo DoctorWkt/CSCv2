@@ -355,3 +355,42 @@ I've also added some single-stepping functionality to csim, and some
 pseudo-instructions which allow us to print out the regs and dump the
 RAM in csim. These pseudo-instructions are actually NOPs in real hardware,
 so we can keep them in and still burn ROMs from the machine code output.
+
+Sat 25 Nov 15:17:48 AEST 2017
+-----------------------------
+My breadboard is getting flakey to the point where I can't run most programs.
+During the week I looked at EasyEDA to design a PCB. I got to the point where
+I had a layout with most of the soldering on the bottom layer. However, I've
+now decided to do it on a stripboard. So I've bought some stuff from Element14
+including an AGB20 160mm x 200mm tinned stripboard (expensive). Chris Baird
+is going to mail me some resistor networks for the LEDs, and I've bought some
+74HC components as well, as Chris says they can cope with 330R resistors and
+the LEDs.
+
+I've found a 555 circuit where the one-shot lasts a maximum length regardless
+of how long you hold down the pushbutton. Needs one more resistor and a diode.
+I'll incorporate this into the stripboard version. I'll put the 555 astable
+trigger/threshold capacitor in a 2-pin socket so I can change the 555 astable
+clock signal speed. I'll leave room for a crystal oscillator, and I'll have
+six pins and three jumper positions so I can choose one-shot, astable or
+crystal as the source.
+
+I'll try a toggle button for the PC's master reset, so I can keep it reset
+while I'm turning it on or changing the clock source.
+
+I think I'll mount the resistor networks also in sockets, so I can remove
+them if I need or want the LEDs to be off. I've bought IC sockets for
+all chips. I need to buy new ZIF sockets as I cut some of the ends off the
+existing ZIF socket pins.
+
+But apart from that, it should be easy enough to migrate the existing
+breadboard design to the stripboard layout. I've printed out a diagram with
+100mil holes on 160mm x 200mm. I've placed the ICs and worked out where to
+run GND and VCC across the whole board. I'll also run CLK across the whole
+board to make it easier to get it to all the chips.
+
+This time I'll start with the 556, then the PC, then the Address and Control
+ROMs. With the LEDs, I'll be able to check the PC value, the address value
+and the control lines. Then I can start to add in the other components. Oh,
+I'll solder in the IC sockets as well, so it looks more than just an empty
+board!
