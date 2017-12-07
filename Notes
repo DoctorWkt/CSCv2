@@ -394,3 +394,41 @@ ROMs. With the LEDs, I'll be able to check the PC value, the address value
 and the control lines. Then I can start to add in the other components. Oh,
 I'll solder in the IC sockets as well, so it looks more than just an empty
 board!
+
+Sunday 26 November  13:49:27 AEST 2017
+--------------------------------------
+I breadboarded the new one-shot circuit yesterday to confirm that it works,
+which it does. Now waiting for the parts to arrive.
+
+Tuesday 5 December  22:20:57 AEST 2017
+--------------------------------------
+On a side branch, with ideas from Chris, I've designed a modification to
+CSCv2 called NSC (Next Small CPU) which can get input from the UART. It
+needs three more muxes and another ROM.
+
+On the CSCv2 front, I've got the stripboard and I've started to build CSCv2
+on it. The new 556 circuits work, and I have two headers so I can easily
+choose which clock source. I've got a toggle button for PC reset, works well.
+The PC is working, and I've got the PC lines to the two ROMs. Tonight I've
+mostly wired up the Address lines out of the Address ROM to the PC and to
+the RAM chip socket. I also have PCincr as the only line coming out from the
+Control ROM. I can single step the incomplete CPU, and the PC increments and
+then jumps. But the address values don't look right. I think that's because
+lines A8-A12 to both ROMs are floating. Tomorrow or soon I'll wire them
+low (no Flags register yet) and see if that stabilises things.
+
+Later that night, yes it was the floating address lines. I've temporarily tied
+A8-A11 low. Now I need to fix one LED which isn't working although it's
+getting 4.8V OK.
+
+Thursday 7 December  18:00:33 AEST 2017
+---------------------------------------
+Slow but steady progress. I fixed the LED. I've wired in the Mux, the A and
+B registers, and I've made a start on the ALU. But I haven't put the ALU
+chip in yet. I've written a test program to LCA and LCB several values,
+then a few address like 0x10, 0x20, 0x40, 0x80 and a JMP so I can see all
+address bits in action as well as a jump. All is working so far. Next up:
+to wire the data bus from the ALU out to the Flags, and some LEDs for the
+ALU output and the ALU operation. The latter will be interesting as we
+are using A8, A9, A10, A12 on the ALU and they are higgledy-piggledy. I might
+have to cut some holes and run a few wires to get them into order.
