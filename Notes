@@ -432,3 +432,84 @@ to wire the data bus from the ALU out to the Flags, and some LEDs for the
 ALU output and the ALU operation. The latter will be interesting as we
 are using A8, A9, A10, A12 on the ALU and they are higgledy-piggledy. I might
 have to cut some holes and run a few wires to get them into order.
+
+Friday 8 December  22:27:50 AEST 2017
+-------------------------------------
+I wired up the ALU output back to the RAM socket (no RAM yet) and to the
+multiplexer, so I could test TAB and TBA instructions. All good except
+I would TAB binary 0001 and see 1000. I had miswired the ALU inputs! Damn,
+so I had to unsolder and fix that. Now the TAB and TBA instructions work,
+so it looks like the ALU is OK.
+
+This morning I did a bit more soldering. I have some of the remaining RAM
+wires done, and some Flags wires, but there are lots more to do. Not sure
+when I'll get a chance.
+
+Sunday 10 December  07:00:55 AEST 2017
+--------------------------------------
+I've got the RAM and the Flags wired up but not tested. Also the OR and UART
+wired up, so I can do output. Yesterday I had a stuck on LSB to the A-register.
+I just diagnosed it as a miswriting to ping 4 (VIO) on the UART which explains
+why it was stuck high.
+
+I'm running genascii.s and it prints out the first 16 chars OK but it doesn't
+increment to the 0x3X range. So I'm guessing that the Flags register isn't
+working correctly. I haven't done the LEDs for it and the data bus yet, so
+that's the next thing to do. So it is about 95% done, just a few things to
+iron out.
+
+Sun 10 Dec 17:55:28 AEST 2017
+-----------------------------
+I wired up the data bus LEDs and the Flags LEDs, and then got on to debugging
+the genascii.s problem. Um, it helps to wire the Flags output to the Address
+ROM _and_ the Control ROM. So, after adding 4 more yellow wires, I can now
+run genascii.s properly.
+
+I'm now running fibminsky.s. The sine wave is coming out perfectly. The
+Fibonaccii calculation isn't though. It's also not the same on each run,
+so I suspect I need to put in the bypass caps on all the chips, which I
+haven't done yet. But it does run mel.s, so that's enough for now!
+
+Mon 11 Dec 08:39:33 AEST 2017
+-----------------------------
+I pulled out the LED resistors and it didn't make a difference. Right now
+I'm seeing this:
+
+0002
+0003
+0005
+0008
+0013
+0011	not 21
+
+so it seems like an issue with carry in. I'll try to get the bypass caps in
+and also check the Cin voltage. I also saw some char printing on non-DAB
+instructions, so there might be a dodgy solder joint on the OR chip. There
+was, now fixed. For a while I thought the bad DADDM was caused by the LEDs
+on the PC value, but it persists at high clock speeds with all the LED
+resistors pulled out. I've also replaced the Mux chip with a HC part, and
+all the registers are already HC parts, so it's not that. So annoying!
+
+It's also not just a Cin problem, as I'm seeing this:
+
+1584	4+1=5, 8+8=6 carry 1, 5+1+Cin=7, 1+1 != 0
+1181
+0765
+
+Any why does the Minsky sine wave work OK at full clock speed? Is it the DADDM
+instruction? Everything else works.
+
+Not just DADDM. In printhexes.s, I'm seeing 0C printed then 0F (or 01). I see
+a RAM write of 0xE to address 1, followed by a read from address 1 with value
+0xF! This happens in single-step mode, so perhaps my RAM wiring is not right.
+
+Mon 11 Dec 21:50:15 AEST 2017
+-----------------------------
+I figured it out. There are some bad RAM locations on the RAM chip, which
+don't read back the value written in at that location. Looks like locations
+below 8 are dodgy. By rewriting the programs, I've been able to run fibminsky,
+bubblesort, circle. I've written my own RAM tester to see which locations are
+bad.
+
+So, finally, I can run fibminsky at full speed :-) I've ordered some new RAM
+chips. Once they arrive, I'll have a go at running wktlife.s at > 10kHz.
