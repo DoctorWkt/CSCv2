@@ -513,3 +513,10 @@ bad.
 
 So, finally, I can run fibminsky at full speed :-) I've ordered some new RAM
 chips. Once they arrive, I'll have a go at running wktlife.s at > 10kHz.
+
+Wednesday 13 December  08:19:18 AEST 2017
+-----------------------------------------
+Yesterday I made a Youtube video of the stripboard version running several
+of the example programs from the Github repository. So that's probably
+about it for the project. I'm happy to say that I've designed and built
+my own CPU from scratch, and it works!
