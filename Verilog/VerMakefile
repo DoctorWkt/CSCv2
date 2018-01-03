@@ -1,0 +1,15 @@
+run: obj_dir/Vicarus_top
+	obj_dir/Vicarus_top | less
+
+obj_dir/Vicarus_top: icarus_top.v sim_main.cpp toprom.rom botrom.rom
+	verilator -Wall --cc icarus_top.v --exe sim_main.cpp
+	make -C obj_dir -j -f Vicarus_top.mk Vicarus_top
+
+toprom.rom: ../toprom.rom
+	grep -v raw ../toprom.rom > toprom.rom
+
+botrom.rom: ../botrom.rom
+	grep -v raw ../botrom.rom > botrom.rom
+
+clean:
+	rm -rf obj_dir

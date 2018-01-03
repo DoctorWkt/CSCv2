@@ -520,3 +520,240 @@ Yesterday I made a Youtube video of the stripboard version running several
 of the example programs from the Github repository. So that's probably
 about it for the project. I'm happy to say that I've designed and built
 my own CPU from scratch, and it works!
+
+Wednesday 20 December  22:40:22 AEST 2017
+-----------------------------------------
+The RAM chips finally arrived. I've swapped a new one it, but the RAM fault
+persists! So it must be a wiring problem, or the LED problem. Very frustrated.
+I'll have to look at it in depth some time.
+
+Thursday 21 December  13:18:04 AEST 2017
+----------------------------------------
+I'm using wktramtest.s to test the RAM. I'm seeing RAM location 6 always 0xF,
+and sporadically other locations (e.g. 0x3F) as zero. Same for two different
+RAM chips.
+
+I've swapped the Address/Control ROMs, same thing. So not a bad ROM chip.
+
+I've moved the location of the peek0x and poke0x instructions around and
+that fixes things up! Doesn't help me guess what the problem is though.
+Perhaps a miswiring?
+
+It's the poke0x code sequence. If I move it to after the poke1x sequence,
+the test is OK. If before, I see RAM location 6 always 0xF,
+
+Tuesday 19 December  10:45:36 AEST 2017
+---------------------------------------
+So, I've ordered a TinyFPGA B2 and the long-term goal is to develop a CPU
+and bring up RetroBSD on it. A very long-term goal!
+
+Of course, now I need to learn Verilog properly, as well as the IceStorm
+tools and probably the Lattice tools as well. Oh, and perhaps the Icarus
+Verilog tools and Verilator, and GTKwave, and the Bitscope Micro. Oh well,
+just another set of learning curves!
+
+I think I can get away with the B2, some SDI RAM, a SD card & socket,
+and a UM245R as the console device. And that means I can breadboard it on
+one or perhaps two breadboards.
+
+Looking at the pin constraints file for the B2:
+
+	pin1 usb_dp    A3
+	pin2 usb_dn    A4
+	pin3 clk_16mhz B4
+	pin14 sdo      G6
+	pin15 sdi      H7
+	pin16 sck      G7
+	pin17 ss       F7
+
+We need 10 lines for the UM245R: eight data and a read & write control line.
+So I might wire them up on the left side as lines 4 to 13. On the right side,
+pins 14-17 can be used for the SD card, pins 18-21 for the RAM. Graphically,
+on a breadboard running left to right:
+
+     +------+
+     |  SD  |
+     | Card |
+     +------+
+    +-------------+   +------+   +------+   +--------+
+    | TinyFPGA B2 |   | RAM1 |   | RAM2 |   | UM245R |
+    +-------------+   +------+   +------+   +--------+
+
+I could even have two RAM chips and have them on the same SDI bus but
+with different chip select lines to each one. As drawn now. This way the
+two USB ports are at each end of the breadboard. And there would be room
+for a few LEDs wired up to the unused pins (debugging?).
+
+All of this is pie in the sky for now. I'm thinking of bringing up some
+simpler stuff to start with:
+
+1. LED blink project from the TinyFPGA site.
+2. Send some characters out of the UM245R.
+3. Read and echo characters out of the UM245R.
+4. I could even bring up CSCv2, not using external RAM.
+
+That would get me used to the tools, the workflow and some Verilog. After
+that, I could start looking at learning the SPI stuff to communicate with
+the RAM and the SD card.
+
+At some point I should look into Wishbone, it might be useful for debugging
+or something. The Bitscope Micro decodes I2C and SPI, so maybe I should write
+debug output as SPI packets on four unused pins :-)
+
+Wednesday 20 December  22:42:19 AEST 2017
+-----------------------------------------
+I started to look at the CSCv2 Verilog code. Yosys doesn't like the tri-state
+wires, so I tried to change them by adding a new mux. It's taken me several
+hours but I finally worked it out. I also found that the declaration of
+inputs and outputs can be tidied up, so I'll do that too.
+
+Ah, the ICE40LP8K only has 16KB of RAM, so I don't think I'll be able to
+fit all three ROM images in. Luckily, I can rewrite the ALU using Verilog
+instructions, except perhaps the multiply/divide/mod stuff which I'm not
+using anyway. That means only 8KB for the addr/control ROMs, and enough left
+over for registers and RAM.
+
+Friday 22 December  16:15:47 AEST 2017
+--------------------------------------
+It's been a bit frustrating as synthesis is a lot different to simulation.
+I've had to do things differently, but just now I've actually got a
+synthesis on the ICE40LP8K with pins out to the UART. I had to add an
+active high reset line, which resets all the sequential devices (PC, Flags).
+I've reimported all the Verilog code here and it simulates OK still. In the
+process, I rewrote the ALU using behavioural code instead of the ROM.
+
+I'm sure all of the above can be optimised a fair bit.
+
+Friday 22 December  20:14:30 AEST 2017
+--------------------------------------
+OK, I've worked out how to get the Verilog code for CSCv2 into one directory
+so that it can be shared with Icarus, Lattice and Yosys. Right now it runs
+with Icarus, I can get a Lattice synthesis but Yosys dies.
+
+Hah. I had an Ubuntu package for yosys. I've just built it from the Github
+repository, and now I can build Icarus, Lattice and Yosys. Yay!
+
+Friday 22 December  22:29:12 AEST 2017
+--------------------------------------
+I was worried that the * / % Verilog operations were costing a lot of
+FPGA real estate. So I just replaced these ALU ops with +, and I get this
+comparison:
+After packing:		  After packing:
+IOs          13 / 63	  IOs          13 / 63
+GBs          0 / 8	  GBs          0 / 8
+  GB_IOs     0 / 8	    GB_IOs     0 / 8
+LCs          2555 / 7680  LCs          2419 / 7680
+  DFF        1048	    DFF        1048
+  CARRY      96	  	    CARRY      40
+  CARRY, DFF 15	  	    CARRY, DFF 15
+  DFF PASS   1045	    DFF PASS   1045
+  CARRY PASS 19	  	    CARRY PASS 10
+BRAMs        16 / 32	  BRAMs        16 / 32
+WARMBOOTs    0 / 1	  WARMBOOTs    0 / 1
+PLLs         0 / 2	  PLLs         0 / 2
+
+so there isn't too much difference.
+
+Friday 22 December  22:37:24 AEST 2017
+--------------------------------------
+Details from the datasheets. UM245R: Connecting the VCCIO pin 4 to 1.8V, 2.8V,
+or 3.3V allows the device to directly interface to 1.8V, 2.8V or 3.3V and
+other logic families without the need for external level converter ICs.
+In USB bus powered designs connect to 3V3OUT pin 19 to drive out at 3.3V
+levels (connect jumper J1 pins 1 and 2 together).
+
+The B2 schematic has two power regulators which take 5V and produce 3.3V
+and 1.2V. The iCE40 handbook says: Output Supply Voltage VCCIO, VCC_SPI is
+-0.5 to 3.6V.
+
+So we can connect 5V from UM245R to B2. I/O will be 3.3V. We need to connect
+UM245R VCCIO pin 4 to the 3V3OUT pin 19.
+
+Sunday 24 December  16:06:36 AEST 2017
+--------------------------------------
+Down in Yamba. Luke from TinyFPGA says to wire the 5V from the UM245R to
+the B2, as the B2 has its own 3V3 converter. I've also just wired a pin
+to the CSC clock derived from the 16MHz clock, so I can at least wire up
+a LED and check that the clock signal is working!
+
+Tuesday 26 December  20:46:56 AEST 2017
+---------------------------------------
+Back from Yamba. I've done a Kicad schematic with the B2 and UM245R side
+by side, and wired up a reset line plus a LED for the clock. Looks good.
+Just found out that I can use the same top-level Verilog file for both
+IceStorm and Lattice which makes things a lot easier.
+
+Tuesday 2 January  13:58:09 AEST 2018
+-------------------------------------
+Now working on getting it to run in Verilator. I had to fix up the ALU to
+remove some circular logic. Still runs in Icarus, but no Verilog output yet.
+Yay, finally got it to work! And it still runs in Icarus but much more slowly.
+Gives me confidence that it will synthesise OK with IceStorm.
+
+Hmm, I realised that the RAM wasn't being synthesised to BRAM with yosys. I've
+found a verilog RAM that does, but it's not directly compatible with my RAM.
+So I wonder if I can tweak things to use the new RAM. It should save about
+1000 cells. Yes, there's a one clock delay in reading from the RAM. Perhaps
+I can send a doubled clock to the RAM?
+
+Yes, a doubled clock works for Icarus and Verilator, and yosys gives:
+
+=== TinyFPGA_B ===
+
+   Number of wires:                457
+   Number of wire bits:           1118
+   Number of public wires:          69
+   Number of public wire bits:     290
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                495
+     SB_CARRY                      101
+     SB_DFF                         33
+     SB_DFFE                         9
+     SB_LUT4                       335
+     SB_RAM40_4K                    17
+
+After packing:
+IOs          14 / 63
+GBs          0 / 8
+  GB_IOs     0 / 8
+LCs          435 / 7680		was 2419!
+  DFF        25
+  CARRY      94
+  CARRY, DFF 17
+  DFF PASS   21
+  CARRY PASS 18
+BRAMs        17 / 32
+WARMBOOTs    0 / 1
+PLLs         0 / 2
+
+There is some DRY code with the half-speed clk and the TX line to tidy up.
+I've decided to keep it so that the API into the CSCv2 component is clean.
+I've just updated the TinyFPGA_B.v file to also have two clocks. Now it
+should run OK on the FPGA as well.
+
+Wednesday 3 January  21:00:17 AEST 2018
+---------------------------------------
+Coincidentally, both the TinyFPGA B2 and the UM245R turned up today. I got
+the blinky project working fine. Then I wired up the CSCv2 circuit on the
+breadboards and programmed the B2. Took a while to get the CLI programmer
+installed. Even though I had different TX and CPU clocks, I was still seeing
+doubled output chars, but the CPU was working!
+
+I've just moved the logic to create the TX signal into the CSCv2, and now
+I am getting fibminsky running fine on the B2! So the Verilog code worked
+first time. Close: it's not reacting to the reset line. However, I might
+have miswired that, so I need to check it. Overall, lots of success. I've
+only tried it up to a few hundred Hz, not to 1MHz yet :)
+
+I checked the Verilog (and added more comments). The reset logic seems OK,
+so tomorrow I'll check the voltages on the pin that is connected to the
+reset wiring. Hmm, just checked it before bed. Yes, pin 10 is getting 3.2V
+when the reset button is pressed, and this is the same voltage as the 3v3
+output on the UM245R and also the same as the average TX pin value. So
+somehow the CPU isn't reacting to this line.
+
+Wednesday 3 January  23:41:18 AEST 2018
+---------------------------------------
+I'm such a dillpickle. I had defined pin10 as an output not an input. Fixed!

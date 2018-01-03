@@ -1,47 +1,27 @@
-// Design Name : ram_sp_sr_sw
-// File Name   : ram_sp_sr_sw.v
-// Function    : Synchronous read write RAM 
-// Coder       : Deepak Kumar Tala
-// Modified by : Warren Toomey
-
+// This uses the iCE40 Block RAM, but has an output
+// reg so there's a 1-clock delay on output. To get
+// it to work with CSCv2, the clock here is twice
+// the frequency of the main CSCv2 clock.
+//
+// Code borrowed from Clifford Wolf on reddit, then
+// modified by Warren Toomey.
 module ram (
-    clk,	// Clock Input
-    address,	// Address Input
-    data,	// Data bi-directional
-    we		// Write enable, active low
-  ); 
+  input      clk,
+  input      [7:0] addr,
+  input      [3:0] wdata,
+  output reg [3:0] rdata,
+  input      we
+  );
 
-  parameter DATA_WIDTH= 4 ;
-  parameter ADDR_WIDTH= 8 ;
-  parameter RAM_DEPTH= 1 << ADDR_WIDTH;
+  // 256 4-bit words
+  reg [3:0] mem [0:255];
 
-  // Input Ports
-  input                  clk;
-  input [ADDR_WIDTH-1:0] address;
-  input                  we;
-  wire                   clk;
-  wire [ADDR_WIDTH-1:0]  address;
-  wire                   we;
-
-  // Inout Ports
-  inout [DATA_WIDTH-1:0]  data;
-  wire  [DATA_WIDTH-1:0]  data;
-
-  // Internal variables
-  reg [DATA_WIDTH-1:0] mem [0:RAM_DEPTH-1];
-
-  // Tri-State Buffer control 
-  // output : When we == 1
-  assign data= (we) ? mem[address] : 4'bz; 
-
-  // Memory Write Block 
-  // Write Operation : When we == 0
-  always @ (posedge clk)
-  begin : MEM_WRITE
-    if ( !we ) begin
-      mem[address]= data;
-      // $display("Wrote %h to addr %h", data, address);
-    end
+  // Update a location on active low
+  // write enable. Always output data
+  // from that address.
+  always @(posedge clk) begin
+    if (!we)
+      mem[addr] <= wdata;
+    rdata <= mem[addr];
   end
-
 endmodule

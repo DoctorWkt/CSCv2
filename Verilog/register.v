@@ -2,29 +2,23 @@
 // (c) 2017 Warren Toomey, GPL3
 
 module register (
-	clk,		// Clock input
-	load,		// Load line (active low)
-	data,		// Input data
-	result		// Register output
+	input clk,		// Clock input
+	input reset,		// Reset line
+	input load,		// Load line (active low)
+	input  [3:0] data,	// Input data
+	output [3:0] result	// Register output
   );
 
-  input		clk;
-  input		load;
-  input  [3:0] 	data;
-  output [3:0] 	result;
-
-  // All the input ports should be wires   
-  wire clk;
-  wire load;
-  wire [3:0] data;
-
-  // Output is a register, obviously
-  reg [3:0] result;
-  initial result= 0;
+  // Result is a register, obviously
+  reg [3:0] internal_result;
+  assign result= internal_result;
 
   always @(posedge clk) begin
-    if (load==0)
-      result <= data;
+    if (reset)
+      internal_result <= 0;
+    else
+      if (load==0)
+        internal_result <= data;
   end
 
 endmodule

@@ -2,39 +2,18 @@
 // (c) 2017 Warren Toomey, GPL3
 
 module toprom (
-	PC,		// PC's value
-	NZVC,		// Flags value
-	ALUop,		// Outputs
-	PCincr,
-	Aload,
-	Bload,
-	Asel,
-	RAMwrite
+  	input  [7:0] PC,	// PC's value
+  	input  [3:0] NZVC,	// Flags value
+  	output [2:0] ALUop,	// Outputs
+  	output 	     PCincr,
+  	output       Aload,
+  	output 	     Bload,
+  	output 	     Asel,
+  	output 	     RAMwrite
   );
 
   parameter ADDR_WIDTH= 12;
   parameter ROM_DEPTH= 1 << ADDR_WIDTH;
-
-
-  input  [7:0]  PC;
-  input  [3:0]  NZVC;
-  output [2:0]  ALUop;
-  output 	PCincr;
-  output      	Aload;
-  output 	Bload;
-  output 	Asel;
-  output 	RAMwrite;
-
-  // All the input ports should be wires   
-  wire [7:0] PC;
-  wire [3:0] NZVC;
-
-  wire [2:0] ALUop;
-  wire 	     PCincr;
-  wire 	     Aload;
-  wire 	     Bload;
-  wire 	     Asel;
-  wire 	     RAMwrite;
 
   // ROM unit
   reg [7:0] ROM [0:ROM_DEPTH-1];

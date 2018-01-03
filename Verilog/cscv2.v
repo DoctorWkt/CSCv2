@@ -1,6 +1,26 @@
 // Crazy Small CPU version 2
 // (c) 2017 Warren Toomey, GPL3
 
+// Just a few notes on the Verilog implementation of the CSCv2.
+//
+// Firstly, the ram.v component waits a clock cycle before it
+// outputs when the address changes. So we give it a clock signal
+// twice the frequency of the main CPU clock signal.
+//
+// A synthesized design can't have "initial" values for registers and the PC,
+// so there is now a reset line which, when high, resets the registers and the
+// PC to zero.
+//
+// The UART is now separate from the CPU, but we output the TX
+// control line which is still the OR of Aload, Bload and the clock.
+//
+// Because the high impedance logic state doesn't get synthesised well,
+// there is a new multiplexer, databus. This chooses either the RAM
+// output or the ALU output based on the RAMwrite control line.
+//
+// Apart from the above, everything else is exactly the same as the
+// version made from 7400-style chips.
+
 `include "register.v"
 `include "alu.v"
 `include "botrom.v"
@@ -9,51 +29,33 @@
 `include "toprom.v"
 
 module cscv2 (
-	clk,		// Clock signal
-	Aval,		// Output of A register
-	Bval,		// Output of B register
-	PCval,		// Output of PC
-	RAMwrite,
-	address,
-	Flagsval,
-	ALUop,
-	ALUresult,
-	Aload,
-	Bload,
-	Asel
+  	input 	      dblclk,	// Clock signal
+  	input 	      reset,	// Reset line, active high
+	output	      TX,	// UART control line, active low
+  	output [3:0]  Aval,	// Output of A register
+  	output [3:0]  Bval,	// Output of B register
+				// Outputs of other internal data/control lines.
+				// Used for debugging and diagnostics
+  	output [7:0]  PCval,
+  	output	      RAMwrite,
+  	output [7:0]  address,
+  	output [3:0]  Flagsval,
+  	output [2:0]  ALUop,
+  	output [3:0]  ALUresult,
+  	output [3:0]  RAMresult,
+  	output [3:0]  databus,
+  	output        Aload,
+  	output        Bload,
+  	output        Asel
   );
 
-  // I/O Definitions
-  input 	clk;
-  output [3:0]  Aval;
-  output [3:0]  Bval;
-  output [7:0]  PCval;
-  output	RAMwrite;
-  output [7:0]  address;
-  output [3:0]  Flagsval;
-  output [2:0]  ALUop;
-  output [3:0]  ALUresult;
-  output        Aload;
-  output        Bload;
-  output       Asel;
+  // Half speed clock, i.e. half the speed of the RAM clock
+  reg clk= 0;
 
-  // I/O Wires
-  wire       clk;
-  wire [3:0] Aval;
-  wire [3:0] Bval;
-  wire [7:0] PCval;
-
-  // Control Wires
-  wire [2:0] ALUop;
+  // Control Wires not provided as outputs
   wire       PCincr;
-  wire       Aload;
-  wire       Bload;
-  wire       Asel;
-  wire       RAMwrite;
 
   // Register outputs
-  wire [3:0] Flagsval;
-  wire [7:0] address;	// From bottom ROM
   wire Cin;
   assign Cin= Flagsval[0];
 
@@ -62,21 +64,30 @@ module cscv2 (
   assign addrlow= address[3:0];
 
   // ALU output
-  wire [3:0] ALUresult;
   wire [3:0] ALUflags;
 
   // Register multiplexer
   wire [3:0] regmux;
-  assign regmux= (Asel) ? ALUresult : addrlow;
+  assign regmux= (Asel) ? databus : addrlow;
+
+  // New multiplexer to avoid high-Z logic
+  assign databus= (RAMwrite) ? RAMresult : ALUresult;
+
+  // UART control line
+  assign TX = Aload | Bload | clk;
 
   // Components
-  register A(clk, Aload, regmux, Aval);
-  register B(clk, Bload, regmux, Bval);
-  register Flags(clk, RAMwrite, ALUflags, Flagsval);
-  pc PC(clk, PCincr, address, PCval);
-  alu ALU(Aval, Bval, ALUop, Cin, RAMwrite, Asel, ALUresult, ALUflags);
+  register A(clk, reset, Aload, regmux, Aval);
+  register B(clk, reset, Bload, regmux, Bval);
+  register Flags(clk, reset, RAMwrite, ALUflags, Flagsval);
+  pc PC(clk, reset, PCincr, address, PCval);
+  alu ALU(Aval, Bval, ALUop, Cin, Asel, ALUresult, ALUflags);
   toprom TOP(PCval, Flagsval, ALUop, PCincr, Aload, Bload, Asel, RAMwrite);
   botrom BOT(PCval, Flagsval, address);
-  ram RAM(clk, address, ALUresult, RAMwrite);
+  ram RAM(dblclk, address, ALUresult, RAMresult, RAMwrite);
+
+  // Calculate the CPU clock from the RAM clock
+  always @(posedge dblclk)
+     clk <= ~clk;
 
 endmodule
