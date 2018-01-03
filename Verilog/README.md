@@ -6,23 +6,23 @@ three make files: Makefile, VerMakefile and YoMakefile.
 
 ## Icarus Verilog
 
-If you have Icarus Verilog and you have assembled botrom.rom and toprom.rom
-files in the parent directory, you can do:
+If you have Icarus Verilog and you have assembled ```botrom.rom```
+and ```toprom.rom``` files in the parent directory, you can do:
 
 ```
 make
 ```
 
 to compile the Verilog sources here and run the CPU with these ROM images.
-This will also produce a ```test.vcd`` waveform output file. You can also
+This will also produce a ```test.vcd``` waveform output file. You can also
 ```make clean``` to remove the output files, and ```make realclean``` to
 do the same but also to remove the copies of the ROM images in this directory.
 
 ## Verilator
 
 If you have Verilator installed, you can simulate the CPU with this tool.
-Once you have assembled botrom.rom and toprom.rom files in the parent
-directory, you can do:
+Once you have assembled ```botrom.rom``` and ```toprom.rom``` files in the
+parent directory, you can do:
 
 ```
 make -f VerMakefile
@@ -35,8 +35,8 @@ ROM images. You can also ```make clean``` to remove the output files.
 
 If you have a TinyFPGA B2 and the IceStorm toolchain installed, you can
 synthesize a bitstream to program onto this device.
-Once you have assembled botrom.rom and toprom.rom files in the parent
-directory, you can do:
+Once you have assembled ```botrom.rom``` and ```toprom.rom``` files in the
+parent directory, you can do:
 
 ```
 make -f VerMakefile
@@ -48,7 +48,7 @@ You can also ```make clean``` to remove the output files.
 
 ## Changes from the Chip Version of CSCv2
 
-Firstly, the ram.v component waits a clock cycle before it
+Firstly, the ```ram.v``` component waits a clock cycle before it
 outputs when the address changes. So we give it a clock signal
 twice the frequency of the main CPU clock signal.
 
