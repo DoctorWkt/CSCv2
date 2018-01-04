@@ -33,8 +33,9 @@ ROM images. You can also ```make clean``` to remove the output files.
 
 ## IceStorm and TinyFPGA B2
 
-If you have a TinyFPGA B2 and the IceStorm toolchain installed, you can
-synthesize a bitstream to program onto this device.
+If you have a [TinyFPGA B2](https://store.tinyfpga.com/products/tinyfpga-b2)
+and the [IceStorm toolchain](http://www.clifford.at/icestorm/) installed,
+you can synthesize a bitstream to program onto this device.
 Once you have assembled ```botrom.rom``` and ```toprom.rom``` files in the
 parent directory, you can do:
 
