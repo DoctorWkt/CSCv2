@@ -21,7 +21,7 @@ DEVICE = lp8k
 
 all: $(PROJ).rpt $(PROJ).bin
 
-%.blif: %.v toprom.rom botrom.rom
+%.blif: %.v toprom.rom botrom.rom alu.rom
 	yosys -p 'synth_ice40 -top $(PROJ) -blif $@' $<
 
 %.asc: $(PIN_DEF) %.blif
@@ -53,6 +53,9 @@ toprom.rom: ../toprom.rom
 
 botrom.rom: ../botrom.rom
 	grep -v raw ../botrom.rom > botrom.rom
+
+alu.rom: ../alu.rom
+	grep -v raw ../alu.rom > alu.rom
 
 prog: $(PROJ).bin
 	iceprog $<
