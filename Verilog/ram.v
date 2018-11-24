@@ -13,8 +13,10 @@ module ram (
   input      we
   );
 
-  // 256 4-bit words
+  // 256 4-bit words, initialised to zeroes
   reg [3:0] mem [0:255];
+  integer i;
+  initial for (i = 0; i < 256; i = i + 1) mem[i] = 4'd0; 
 
   // Update a location on active low
   // write enable. Always output data

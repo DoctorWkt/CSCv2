@@ -1,22 +1,6 @@
 // 4-bit ALU
 // (c) 2017 Warren Toomey, GPL3
 
-//  DADD  => 0,         # A + B decimal
-//  DSUB  => 1,         # A - B decimal
-//  AND   => 2,         # A & B
-//  OR    => 3,         # A | B
-//  XOR   => 4,         # A ^ B
-//  INCA  => 5,         # A + 1
-//  BFLAGS => 6,        # 0, flags set to B's value
-//  ZERO  => 7,         # 0
-//  ADD   => 8,         # A + B binary
-//  SUB   => 9,         # A - B binary
-//  PASSA => 10,        # A
-//  PASSB => 11,        # B
-//  MULLO => 12,        # A * B binary, low nibble
-//  MULHI => 13,        # A * B binary, high nibble
-//  DIV   => 14,        # A / B binary
-//  MOD   => 15,        # A % B binary
 
 module alu (
 	input [3:0] A,		// First operand
@@ -24,9 +8,26 @@ module alu (
 	input [2:0] ALUop,	// ALU operation
 	input Cin,		// Carry in
 	input ALUbank,		// Which operation bank in use
-	output [3:0] result,	// ALU result
+	output reg [3:0] result,// ALU result
 	output [3:0] flags	// NZVC flags
   );
+
+  parameter DADD  = 0;         // A + B decimal
+  parameter DSUB  = 1;         // A - B decimal
+  parameter AND   = 2;         // A & B
+  parameter OR    = 3;         // A | B
+  parameter XOR   = 4;         // A ^ B
+  parameter INCA  = 5;         // A + 1
+  parameter BFLAGS = 6;        // 0, flags set to B's value
+  parameter ZERO  = 7;         // 0
+  parameter ADD   = 8;         // A + B binary
+  parameter SUB   = 9;         // A - B binary
+  parameter PASSA = 10;        // A
+  parameter PASSB = 11;        // B
+  parameter MULLO = 12;        // A * B binary, low nibble
+  parameter MULHI = 13;        // A * B binary, high nibble
+  parameter DIV   = 14;        // A / B binary
+  parameter MOD   = 15;        // A % B binary
 
   // Temporary results for always code
   reg [4:0] temp_result;	// Top bit indicates carry
@@ -40,139 +41,131 @@ module alu (
   assign Op[2:0] = ALUop;
   assign Op[3]   = ALUbank;
 
-  /* verilator lint_off WIDTH */
   always @* begin
     case (Op)
-      4'h0: begin				// Decimal ADD
-	  temp_result= A + B + Cin;
-	  if (temp_result>9)
-	    begin temp_result= temp_result - 10; C= 1;
+      DADD: begin				// Decimal ADD
+	  temp_result= {1'd0, A} + {1'd0, B} + {4'd0, Cin};
+  	  result= temp_result[3:0];
+	  if (temp_result>9) begin
+	    result= result - 10; C= 1;
 	    end
 	  else C= 0;
 	  N= 0;
-	  Z= (temp_result==0) ? 1 : 0;
+	  Z= (result==0) ? 1 : 0;
 	  V= 0;
         end
-      4'h1: begin				// Decimal SUB
-	  temp_result= A - B - Cin;
-	  if (temp_result>9)
-	    begin temp_result= temp_result - 10; C= 1;
+      DSUB: begin				// Decimal SUB
+	  temp_result= {1'd0, A} - {1'd0, B} - {4'd0, Cin};
+  	  result= temp_result[3:0];
+	  if (temp_result>9) begin
+	    result= result - 10; C= 1;
 	    end
 	  else C= 0;
 	  N= 0;
-	  Z= (temp_result==0) ? 1 : 0;
+	  Z= (result==0) ? 1 : 0;
 	  V= 0;
 	end
-      4'h2: begin
-	  temp_result= A & B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-          V= 0;
-	end
-      4'h3: begin
-	  temp_result= A | B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-          V= 0;
-	end
-      4'h4: begin
-	  temp_result= A ^ B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-          V= 0;
-	end
-      4'h5: begin
-	  temp_result= A + 1;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
-	end
-      4'h6: begin
-	  temp_result= 0;
-	  N= B[3]; Z= B[2]; V= B[1]; C= B[0];
-	end
-      4'h7: begin
-	  temp_result= 0;
+      AND: begin
+	  result= A & B;
 	  C= 0;
-	  N= 0;
-	  Z= 1;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
           V= 0;
 	end
-      4'h8: begin
-	  temp_result= A + B + Cin;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
-	end
-      4'h9: begin
-	  temp_result= A - B - Cin;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
-	end
-      4'ha: begin
-	  temp_result= A;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
+      OR: begin
+	  result= A | B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
           V= 0;
 	end
-      4'hb: begin
-	  temp_result= B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
+      XOR: begin
+	  result= A ^ B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
           V= 0;
 	end
-      4'hc: begin
-	  temp_result= A * B;
+      INCA: begin
+	  {C, result}= {1'd0, A} + 5'd1;
 	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
 	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
 	end
-      4'hd: begin
-	  temp_result= A * B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
+      BFLAGS: begin
+  	  result= 0;
+	  {N, Z, V, C}= B;
 	end
-      4'he: begin
-	  temp_result= A / B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
-	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
+      ZERO: begin
+	  temp_result= 0;			// XXX Why can't I lose
+  	  result= 0;				// the temp_result= 0; line?
+	  {N, Z, V, C}= 4'b0100;
 	end
-      4'hf: begin
-	  temp_result= A % B;
-	  C= temp_result[4];
-	  N= temp_result[3];
-	  Z= (temp_result==0) ? 1 : 0;
+      ADD: begin
+	  {C, result}= {1'd0, A} + {1'd0, B} + {4'd0, Cin};
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
 	  // Overflow: A & B sign same, result sign different
-	  V= ((A[3]==B[3]) && (temp_result[3]!=A[3])) ? 1 : 0;
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
+	end
+      SUB: begin
+	  {C, result}= {1'd0, A} - {1'd0, B} - {4'd0, Cin};
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+	  // Overflow: A & B sign same, result sign different
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
+	end
+      PASSA: begin
+	  result= A;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+          V= 0;
+	end
+      PASSB: begin
+	  result= B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+          V= 0;
+	end
+      MULLO: begin
+	  result= A * B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+	  // Overflow: A & B sign same, result sign different
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
+	end
+      MULHI: begin
+	  result= A * B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+	  // Overflow: A & B sign same, result sign different
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
+	end
+      DIV: begin
+	  result= A / B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+	  // Overflow: A & B sign same, result sign different
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
+	end
+      MOD: begin
+	  result= A % B;
+	  C= 0;
+	  N= result[3];
+	  Z= (result==0) ? 1 : 0;
+	  // Overflow: A & B sign same, result sign different
+	  V= ((A[3]==B[3]) && (N!=A[3])) ? 1 : 0;
 	end
     endcase
   end
 
-  assign result= temp_result;
-  assign flags[3]= N;
-  assign flags[2]= Z;
-  assign flags[1]= V;
-  assign flags[0]= C;
-  /* verilator lint_on WIDTH */
+  assign flags= {N, Z, V, C};
 
 endmodule

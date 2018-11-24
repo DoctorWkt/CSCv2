@@ -1,5 +1,5 @@
 test.vcd: icarus_tb.out toprom.rom botrom.rom
-	vvp icarus_tb.out | less
+	vvp icarus_tb.out
 
 icarus_tb.out: icarus_tb.v icarus_top.v alu.v botrom.v cscv2.v pc.v ram.v \
 							register.v toprom.v
