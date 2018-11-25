@@ -22,7 +22,7 @@ DEVICE = lp8k
 all: $(PROJ).rpt $(PROJ).bin
 
 %.blif: %.v toprom.rom botrom.rom alu.rom
-	yosys -p 'synth_ice40 -top $(PROJ) -blif $@' $<
+	yosys -q -p 'synth_ice40 -top $(PROJ) -blif $@' $<
 
 %.asc: $(PIN_DEF) %.blif
 	arachne-pnr -d 8k -P cm81 -o $@ -p $^
@@ -58,11 +58,7 @@ alu.rom: ../alu.rom
 	grep -v raw ../alu.rom > alu.rom
 
 prog: $(PROJ).bin
-	iceprog $<
-
-sudo-prog: $(PROJ).bin
-	@echo 'Executing prog as root!!!'
-	sudo iceprog $<
+	tinyfpgab --program $<
 
 clean:
 	rm -f $(PROJ).blif $(PROJ).asc $(PROJ).rpt $(PROJ).bin

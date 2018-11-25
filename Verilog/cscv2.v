@@ -7,10 +7,6 @@
 // outputs when the address changes. So we give it a clock signal
 // twice the frequency of the main CPU clock signal.
 //
-// A synthesized design can't have "initial" values for registers and the PC,
-// so there is now a reset line which, when high, resets the registers and the
-// PC to zero.
-//
 // The UART is now separate from the CPU, but we output the TX
 // control line which is still the OR of Aload, Bload and the clock.
 //
@@ -30,7 +26,6 @@
 
 module cscv2 (
   	input 	      dblclk,	// Clock signal
-  	input 	      reset,	// Reset line, active high
 	output	      TX,	// UART control line, active low
   	output [3:0]  Aval,	// Output of A register
   	output [3:0]  Bval,	// Output of B register
@@ -77,10 +72,10 @@ module cscv2 (
   assign TX = Aload | Bload | clk;
 
   // Components
-  register A(clk, reset, Aload, regmux, Aval);
-  register B(clk, reset, Bload, regmux, Bval);
-  register Flags(clk, reset, RAMwrite, ALUflags, Flagsval);
-  pc PC(clk, reset, PCincr, address, PCval);
+  register A(clk, Aload, regmux, Aval);
+  register B(clk, Bload, regmux, Bval);
+  register Flags(clk, RAMwrite, ALUflags, Flagsval);
+  pc PC(clk, PCincr, address, PCval);
   alu ALU(Aval, Bval, ALUop, Cin, Asel, ALUresult, ALUflags);
   toprom TOP(PCval, Flagsval, ALUop, PCincr, Aload, Bload, Asel, RAMwrite);
   botrom BOT(PCval, Flagsval, address);

@@ -5,8 +5,7 @@
 `include "uart.v"
 
 module icarus_top (
-  	input 	      dblclk,	// Clock signal
-  	input 	      reset	// Reset line
+  	input 	      dblclk	// Clock signal
   );
 
   // CPU wires
@@ -32,7 +31,7 @@ module icarus_top (
   assign AB[3:0] = Bval;
 
   // Components
-  cscv2 CPU(dblclk, reset, TX, Aval, Bval, PCval, RAMwrite, address, Flagsval,
+  cscv2 CPU(dblclk, TX, Aval, Bval, PCval, RAMwrite, address, Flagsval,
 	    ALUop, ALUresult, RAMresult, databus, Aload, Bload, Asel);
   uart UART(AB, TX);
 

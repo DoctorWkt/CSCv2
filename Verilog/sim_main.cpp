@@ -16,9 +16,6 @@ int main(int argc, char **argv, char **env) {
     tfp->open("simx.vcd");
 #endif
 
-    top->reset = 1; top->eval();
-    top->reset = 0; top->eval();
-
     for (i=0; i < 800000; i++) {
       top->dblclk ^= 1; top->eval();
 #ifdef TRACE

@@ -1,6 +1,10 @@
 run: obj_dir/Vicarus_top
 	obj_dir/Vicarus_top | less
 
+# If you have pipeviewer (pv) installed, you can slow the output
+# down by using this command instead
+#	obj_dir/Vicarus_top | pv -q -L 500
+
 obj_dir/Vicarus_top: icarus_top.v sim_main.cpp toprom.rom botrom.rom alu.rom
 	verilator -Wall --cc icarus_top.v --exe sim_main.cpp
 	make -C obj_dir -j -f Vicarus_top.mk Vicarus_top
