@@ -10,7 +10,7 @@ ulx3s_out.config: ULX3S.json
 		--textcfg ulx3s_out.config 
 
 ULX3S.json: ULX3S.v
-	yosys -q -p 'synth_ecp5 -noccu2 -nomux -json ULX3S.json' ULX3S.v
+	yosys -q -p 'synth_ecp5 -json ULX3S.json' ULX3S.v
 
 prog: ulx3s.bit
 	sudo ~wkt/.bin/ujprog *.bit

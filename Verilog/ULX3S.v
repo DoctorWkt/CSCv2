@@ -27,7 +27,7 @@ module ULX3S (input clk_25mhz, output ftdi_rxd, output [7:0] led);
   reg [15:0] counter=0;
   always @(posedge i_clk) counter <= counter + 1;
   wire	     csc_clk;
-  assign     csc_clk= counter[11];
+  assign     csc_clk= counter[12];
 
 /* verilator lint_off UNUSED */
   // CPU wires: not all used
