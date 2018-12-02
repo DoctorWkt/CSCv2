@@ -46,12 +46,35 @@ make -f YoMakefile
 ```
 
 to compile the Verilog sources here with yosys and friends, and this will
-produce the bitstream file TinyFPGA_B.bin.
+produce the bitstream file ```TinyFPGA_B.bin```.
 You can also ```make -f YoMakefile clean``` to remove the output files.
 
 Pin 13 on the TinyFPGA B2 is the UART output from the board, running at
 115,200 bps. You will need to wire this pin and the TinyFPGA ground pin
 to a serial receiver, e.g. a USB to 3.3V TTL Converter USB Adapter Cable.
+
+## Using the ULX3S FPGA Board
+
+If you have a [ULX3S FPGA Board](http://radiona.org/new-fpga-board-ulx3s/)
+and a recent (Dec 2018 or later)
+[yosys/trellis/nextpnr toolchain](https://github.com/SymbiFlow/prjtrellis)
+installed, 
+you can synthesize a bitstream to program onto this device.
+Once you have assembled ```alu.rom```, ```botrom.rom``` and ```toprom.rom```
+files in the parent directory, you can do:
+
+```
+make -f ULMakefile
+```
+
+to compile the Verilog sources here with yosys and friends, and this will
+produce the bitstream file ```ulx3s.bit```.
+You can ```make -f ULMakefile clean``` to remove the output files.
+You can ```make -f ULMakefile prog``` to program the board using the
+_ujprog_ program.
+
+Use a serial program like _minicom_ running at 9,600 bps and with no
+hardware flow control to see the output from the CPU.
 
 ## Changes from the Chip Version of CSCv2
 
